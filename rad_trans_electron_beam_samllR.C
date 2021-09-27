@@ -25,8 +25,8 @@ void rad_trans_electron_beam_samllR(){
    
    double x_min1D[nDet] = {0,0,0};
    double x_max1D[nDet] = {100,100,100};
-   double x_min2D[nDet] = {-150,-150,-150};
-   double x_max2D[nDet] = {150,150,150};
+   double x_min2D[nDet] = {-175,-175,-175};
+   double x_max2D[nDet] = {175,175,175};
    double eCut[nDet] = {1000,1,1};
    double rCut[nDet] = {0,0,0};
    TH1F* h_energy[nDet];
@@ -59,7 +59,7 @@ void rad_trans_electron_beam_samllR(){
    }
    TChain* T = new TChain("T");
    int nfile = 0;
-   for(int ifile = 1001;ifile<=1010;ifile++){
+   for(int ifile = 1001;ifile<=2000;ifile++){
       nfile++;
       T->Add(Form("%s/pB_beam/pB_beam_%d.root",rootfile_dir.Data(),ifile));
    }
@@ -93,7 +93,7 @@ void rad_trans_electron_beam_samllR(){
               h_rate[iDet]->Fill(hitr,rate);
               hxy_energy[iDet]->Fill(hitx,hity,energy*1e-3*rate);//Convert MeV to GeV
               hxy_rate[iDet]->Fill(hitx,hity,rate);
-	     if(hitr>rmin[iDet] && hitr<rmax[iDet]){
+	     if((hitr>rmin[iDet] && hitr<rmax[iDet]) && (abs(hitx)<=150 && abs(hity)<=150)){
               hxy_energyQ[iDet]->Fill(hitx,hity,energy*1e-3*rate);//Convert MeV to GeV
               hxy_rateQ[iDet]->Fill(hitx,hity,rate);
              }
@@ -131,9 +131,6 @@ void rad_trans_electron_beam_samllR(){
       if(iDet==2){
       h_energy[iDet]->Draw("hist");
       h_energyQ[iDet]->Draw("same hist");
-      }else{
-      h_energy[iDet]->Draw("hist");
-      }
       line[0] = new TLine(rmin[iDet],0.0,rmin[iDet],h_energy[iDet]->GetMaximum()/2.0);
       line[1] = new TLine(rmax[iDet],0.0,rmax[iDet],h_energy[iDet]->GetMaximum()/2.0);
       for(int ii=0;ii<2;ii++){
@@ -142,13 +139,16 @@ void rad_trans_electron_beam_samllR(){
          line[ii]->Draw();
       }
       latex.SetTextColor(kRed-2);
-      latex.DrawLatex(0.20,0.85,Form("%s",Form("R_{min}=%.0f mm",rmin[iDet])));
-      latex.DrawLatex(0.20,0.80,Form("%s",Form("R_{max}=%.0f mm",rmax[iDet])));
+      latex.DrawLatex(0.70,0.70,Form("%s",Form("R_{min}=%.0f mm",rmin[iDet])));
+      latex.DrawLatex(0.70,0.65,Form("%s",Form("R_{max}=%.0f mm",rmax[iDet])));
       latex.SetTextColor(1);
-      latex.DrawLatex(0.57,0.85,Form("%s","beam"));
+      latex.DrawLatex(0.45,0.85,Form("%s","beam"));
       latex.SetTextColor(4);
       double integral = h_energyQ[iDet]->Integral();
-      latex.DrawLatex(0.67,0.85,Form("%s:%.1fGHz*GeV","accept",integral*65e-6*1/1.6e-19*1e-9));
+      latex.DrawLatex(0.55,0.85,Form("%s:%.1fGHz*GeV","accept",integral*65e-6*1/1.6e-19*1e-9));
+      }else{
+      h_energy[iDet]->Draw("hist");
+      }
       c_energy_linear[iDet]->SaveAs(Form("./temp/p_energy_linear_%d.pdf",iDet));
    }
 
@@ -159,9 +159,6 @@ void rad_trans_electron_beam_samllR(){
       if(iDet==2){
       h_energy[iDet]->Draw("hist");
       h_energyQ[iDet]->Draw("same hist");
-      }else{
-      h_energy[iDet]->Draw("hist");
-      }
       line[0] = new TLine(rmin[iDet],0.0,rmin[iDet],h_energy[iDet]->GetMaximum()/2.0);
       line[1] = new TLine(rmax[iDet],0.0,rmax[iDet],h_energy[iDet]->GetMaximum()/2.0);
       for(int ii=0;ii<2;ii++){
@@ -170,13 +167,16 @@ void rad_trans_electron_beam_samllR(){
          line[ii]->Draw();
       }
       latex.SetTextColor(kRed-2);
-      latex.DrawLatex(0.20,0.85,Form("%s",Form("R_{min}=%.0f mm",rmin[iDet])));
-      latex.DrawLatex(0.20,0.80,Form("%s",Form("R_{max}=%.0f mm",rmax[iDet])));
+      latex.DrawLatex(0.70,0.70,Form("%s",Form("R_{min}=%.0f mm",rmin[iDet])));
+      latex.DrawLatex(0.70,0.65,Form("%s",Form("R_{max}=%.0f mm",rmax[iDet])));
       latex.SetTextColor(1);
       latex.DrawLatex(0.57,0.85,Form("%s","beam"));
       latex.SetTextColor(4);
       double integral = h_energyQ[iDet]->Integral();
       latex.DrawLatex(0.67,0.85,Form("%s:%.1fGHz*GeV","accept",integral*65e-6*1/1.6e-19*1e-9));
+      }else{
+      h_energy[iDet]->Draw("hist");
+      }
       c_energy_log[iDet]->SaveAs(Form("./temp/p_energy_log_%d.pdf",iDet));
    }
 
@@ -186,9 +186,6 @@ void rad_trans_electron_beam_samllR(){
       if(iDet==2){
       h_rate[iDet]->Draw("hist");
       h_rateQ[iDet]->Draw("same hist");
-      }else{
-      h_rate[iDet]->Draw("hist");
-      }
       line[0] = new TLine(rmin[iDet],0.0,rmin[iDet],h_rate[iDet]->GetMaximum()/2.0);
       line[1] = new TLine(rmax[iDet],0.0,rmax[iDet],h_rate[iDet]->GetMaximum()/2.0);
       for(int ii=0;ii<2;ii++){
@@ -197,13 +194,16 @@ void rad_trans_electron_beam_samllR(){
          line[ii]->Draw();
       }
       latex.SetTextColor(kRed-2);
-      latex.DrawLatex(0.20,0.85,Form("%s",Form("R_{min}=%.0f mm",rmin[iDet])));
-      latex.DrawLatex(0.20,0.80,Form("%s",Form("R_{max}=%.0f mm",rmax[iDet])));
+      latex.DrawLatex(0.70,0.70,Form("%s",Form("R_{min}=%.0f mm",rmin[iDet])));
+      latex.DrawLatex(0.70,0.65,Form("%s",Form("R_{max}=%.0f mm",rmax[iDet])));
       latex.SetTextColor(1);
-      latex.DrawLatex(0.57,0.85,Form("%s","beam"));
+      latex.DrawLatex(0.45,0.85,Form("%s","beam"));
       latex.SetTextColor(4);
       double integral = h_rateQ[iDet]->Integral();
-      latex.DrawLatex(0.67,0.85,Form("%s:%.1fGHz","accept",integral*65e-6*1/1.6e-19*1e-9));
+      latex.DrawLatex(0.55,0.85,Form("%s:%.1fGHz","accept",integral*65e-6*1/1.6e-19*1e-9));
+      }else{
+      h_rate[iDet]->Draw("hist");
+      }
       c_rate_linear[iDet]->SaveAs(Form("./temp/p_rate_linear_%d.pdf",iDet));
    }
 
@@ -214,9 +214,6 @@ void rad_trans_electron_beam_samllR(){
       if(iDet==2){
       h_rate[iDet]->Draw("hist");
       h_rateQ[iDet]->Draw("same hist");
-      }else{
-      h_rate[iDet]->Draw("hist");
-      }
       line[0] = new TLine(rmin[iDet],0.0,rmin[iDet],h_rate[iDet]->GetMaximum()/2.0);
       line[1] = new TLine(rmax[iDet],0.0,rmax[iDet],h_rate[iDet]->GetMaximum()/2.0);
       for(int ii=0;ii<2;ii++){
@@ -225,13 +222,16 @@ void rad_trans_electron_beam_samllR(){
          line[ii]->Draw();
       }
       latex.SetTextColor(kRed-2);
-      latex.DrawLatex(0.20,0.85,Form("%s",Form("R_{min}=%.0f mm",rmin[iDet])));
-      latex.DrawLatex(0.20,0.80,Form("%s",Form("R_{max}=%.0f mm",rmax[iDet])));
+      latex.DrawLatex(0.70,0.70,Form("%s",Form("R_{min}=%.0f mm",rmin[iDet])));
+      latex.DrawLatex(0.70,0.65,Form("%s",Form("R_{max}=%.0f mm",rmax[iDet])));
       latex.SetTextColor(1);
-      latex.DrawLatex(0.57,0.85,Form("%s","beam"));
+      latex.DrawLatex(0.45,0.85,Form("%s","beam"));
       latex.SetTextColor(4);
       double integral = h_rateQ[iDet]->Integral();
-      latex.DrawLatex(0.67,0.85,Form("%s:%.1fGHz","accept",integral*65e-6*1/1.6e-19*1e-9));
+      latex.DrawLatex(0.55,0.85,Form("%s:%.1fGHz","accept",integral*65e-6*1/1.6e-19*1e-9));
+      }else{
+      h_rate[iDet]->Draw("hist");
+      }
       c_rate_log[iDet]->SaveAs(Form("./temp/p_rate_log_%d.pdf",iDet));
    }
 
@@ -241,6 +241,7 @@ void rad_trans_electron_beam_samllR(){
       cxy_energy[iDet] = new TCanvas(Form("cxy_energy%d",iDet));
       if(gPad) gPad->SetRightMargin(0.15);
       hxy_energy[iDet]->Draw("colz");
+      if(iDet==2){
       arc[0] = new TArc(0.0,0.0,rmin[iDet],0,360);
       arc[1] = new TArc(0.0,0.0,rmax[iDet],0,360);
       for(int ii=0;ii<2;ii++){
@@ -258,6 +259,7 @@ void rad_trans_electron_beam_samllR(){
       latex.SetTextColor(4);
       double integral = hxy_energyQ[iDet]->Integral();
       latex.DrawLatex(0.55,0.85,Form("%s:%.1fGHz*GeV","accept",integral*65e-6*1/1.6e-19*1e-9));
+      }
       cxy_energy[iDet]->SaveAs(Form("./temp/p_energy_xy_%d.pdf",iDet));
    }
 
@@ -266,6 +268,7 @@ void rad_trans_electron_beam_samllR(){
       cxy_rate[iDet] = new TCanvas(Form("cxy_rate%d",iDet));
       if(gPad) gPad->SetRightMargin(0.15);
       hxy_rate[iDet]->Draw("colz");
+      if(iDet==2){
       arc[0] = new TArc(0.0,0.0,rmin[iDet],0,360);
       arc[1] = new TArc(0.0,0.0,rmax[iDet],0,360);
       for(int ii=0;ii<2;ii++){
@@ -283,6 +286,7 @@ void rad_trans_electron_beam_samllR(){
       latex.SetTextColor(4);
       double integral = hxy_rateQ[iDet]->Integral();
       latex.DrawLatex(0.55,0.85,Form("%s:%.1fGHz","accept",integral*65e-6*1/1.6e-19*1e-9));
+      }
       cxy_rate[iDet]->SaveAs(Form("./temp/p_rate_xy_%d.pdf",iDet));
    }
 //Now combine all pdf files saved in ./temp/ directory and save a single pdf file in ./plots/ directory

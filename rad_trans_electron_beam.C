@@ -59,7 +59,7 @@ void rad_trans_electron_beam(){
    }
    TChain* T = new TChain("T");
    int nfile = 0;
-   for(int ifile = 1001;ifile<=1010;ifile++){
+   for(int ifile = 1001;ifile<=2000;ifile++){
       nfile++;
       T->Add(Form("%s/pB_beam/pB_beam_%d.root",rootfile_dir.Data(),ifile));
    }
