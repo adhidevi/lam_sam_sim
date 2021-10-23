@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 
-void ds_scanner_radial_dist_elasticC12_noiseRateCut(){
+void ds_scanner_radial_dist_beam(){
    gROOT->Reset();
    gStyle->SetOptStat(0);
    gStyle->SetTitleYOffset(1.3);
@@ -19,30 +19,24 @@ void ds_scanner_radial_dist_elasticC12_noiseRateCut(){
 
    TString rootfile_dir = "$VOLATILE/remoll_rootfiles/PMTShielding/";
    
-   double x_min = 500;
-   double x_max = 700;
-   int nbin=x_max-x_min;
+   double x_min = 0;
+   double x_max = 1000;
+   int nbin=200;
    double bin_width = (x_max-x_min)/nbin;
-   TH1F* h_rate;
-   
-   h_rate = new TH1F(Form("h_rate"),Form("%s dist. on ds-scanner plane (rate weighted);Radius (mm);rate (GHz)/(%duA*%.1fmm)","Radial",beam_curr,bin_width),nbin,x_min,x_max);
+   TH1F* h_rate = new TH1F(Form("h_rate"),Form("%s dist. on ds scanner plane (beam gen);Radius (mm);hits/#thrownEvents/%.1fmm","Radial",bin_width),nbin,x_min,x_max);
    h_rate->SetLineColor(1);
    h_rate->Sumw2();
 
    TChain* T = new TChain("T");
    int nfileSplit=0;
-   for(int fileSplit=1001;fileSplit<=1100;fileSplit++){
+   for(int fileSplit=1001;fileSplit<=2000;fileSplit++){
        nfileSplit++;
-       T->Add(rootfile_dir+Form("PMTSh_elC12_magOFF/PMTSh_elC12_magOFF_%d.root",fileSplit));
+       T->Add(rootfile_dir+Form("PMTSh_Optics1_beam_magOFF/PMTSh_Optics1_beam_magOFF_%d.root",fileSplit));
    }
    cout<<Form("Found %d number of file splits!",nfileSplit)<<endl;
    Long64_t nentry = T->GetEntries();
    std::vector<remollGenericDetectorHit_t> *fHit =0;
-   remollEvent_t *fEv =0;
-   Double_t fRate=0.;
    T->SetBranchAddress("hit", &fHit);
-   T->SetBranchAddress("ev", &fEv);
-   T->SetBranchAddress("rate", &fRate);
    
    Double_t energy, hitr, asym, rate;
    Int_t detector, pid;
@@ -55,9 +49,8 @@ void ds_scanner_radial_dist_elasticC12_noiseRateCut(){
          detector = fHit->at(pk).det;
          energy = fHit->at(pk).e;
          hitr = fHit->at(pk).r;
-         asym = -1*fEv->A;
-         rate = fRate/1.e9/nfileSplit;//Convert to GHz, divide by number of file split
-        if(detector==176 && energy>1 && hitr>100 && pid==11 && (rate<0.001)){
+         rate = 1;
+        if(detector==176 && energy>1 && hitr>0 && pid==2112){
           h_rate->Fill(hitr,rate);
         }
       }
@@ -67,16 +60,18 @@ void ds_scanner_radial_dist_elasticC12_noiseRateCut(){
    h_rateQ = (TH1F*)h_rate->Clone(Form("h_rateQ"));
    h_rateQ->GetXaxis()->SetRangeUser(rmin,rmax);
    h_rateQ->SetLineColor(2);
+   h_rate->Scale(1.0/nentry);
+   h_rateQ->Scale(1.0/nentry);
 
    TLatex latex;
    latex.SetNDC(1);
    latex.SetTextSize(0.04);
    TCanvas* c_rate_linear = new TCanvas("c_rate_linear");
-   h_rate->SetTitle("Radial Distribution of Electrons at Downstream Linear Scanner location with Magnet Off");
+   h_rate->SetTitle("Radial Distribution of Neutrons at Downstream Linear Scanner location with Magnet Off");
    h_rate->Draw("hist");
    h_rateQ->Draw("hist same");
    latex.SetTextColor(1);
-   latex.DrawLatex(0.55,0.85,"elasticC12 magnet off");
+   latex.DrawLatex(0.55,0.85,"beam generator");
    latex.SetTextColor(2);
    latex.DrawLatex(0.55,0.80,"ds scanner acceptance");
    c_rate_linear->SaveAs("./temp/ds_scanner_linear.pdf");
@@ -86,12 +81,12 @@ void ds_scanner_radial_dist_elasticC12_noiseRateCut(){
    h_rate->Draw("hist");
    h_rateQ->Draw("hist same");
    latex.SetTextColor(1);
-   latex.DrawLatex(0.55,0.86,"elasticC12 magnet off");
+   latex.DrawLatex(0.55,0.86,"beam generator");
    latex.SetTextColor(2);
    latex.DrawLatex(0.55,0.82,"ds scanner acceptance");
    c_rate_log->SaveAs("./temp/ds_scanner_log.pdf");
 
 //Now combine all pdf files saved in ./temp/ directory and save a single pdf file in ./plots/ directory
-   gSystem->Exec(Form("pdfunite ./temp/ds_scanner_*.pdf ./plots/PMTSh_elC12_magOFF_electrons_ds_scanner.pdf"));
+   gSystem->Exec(Form("pdfunite ./temp/ds_scanner_*.pdf ./plots/PMTSh_beam_magOFF_neutrons_ds_scanner_test.pdf"));
    gSystem->Exec(Form("rm -rf ./temp/ds_scanner_*.pdf"));
 }

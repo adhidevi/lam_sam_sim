@@ -47,7 +47,7 @@ void rad_trans_electron_beam_rateOnly(){
    }
    TChain* T = new TChain("T");
    int nfile = 0;
-   for(int ifile = 1001;ifile<=1010;ifile++){
+   for(int ifile = 1001;ifile<=2000;ifile++){
       nfile++;
       T->Add(Form("%s/pB_beam/pB_beam_%d.root",rootfile_dir.Data(),ifile));
    }
@@ -57,7 +57,7 @@ void rad_trans_electron_beam_rateOnly(){
    std::vector<remollGenericDetectorHit_t> *fHit =0;
    T->SetBranchAddress("hit", &fHit);
    
-   Double_t energy, hitr, rate;
+   Double_t energy, hitr, rate, hitx, hity;
    Int_t detector, pid;
    for(int ientry=0;ientry<nentry;ientry++){
       if(ientry%(nentry/10)==0)
@@ -68,6 +68,8 @@ void rad_trans_electron_beam_rateOnly(){
          detector = fHit->at(pk).det;
          energy = fHit->at(pk).e;
          hitr = fHit->at(pk).r;
+         hitx = fHit->at(pk).x;
+         hity = fHit->at(pk).y;
          rate = 1;//Rate is taken 1 for beam generator
          for(int iDet=0;iDet<nDet;iDet++){
            if(detector==DetNo[iDet] && energy>eCut[iDet] && hitr>rCut[iDet] && pid==11){
