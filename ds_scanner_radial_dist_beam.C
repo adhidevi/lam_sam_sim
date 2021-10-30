@@ -17,7 +17,7 @@ void ds_scanner_radial_dist_beam(){
    Double_t rmax = 700;
    int beam_curr = 65;
 
-   TString rootfile_dir = "$VOLATILE/remoll_rootfiles/PMTShielding/";
+   TString rootfile_dir = "$VOLATILE/remoll_rootfiles/default-geo/";
    
    double x_min = 0;
    double x_max = 1000;
@@ -31,7 +31,7 @@ void ds_scanner_radial_dist_beam(){
    int nfileSplit=0;
    for(int fileSplit=1001;fileSplit<=2000;fileSplit++){
        nfileSplit++;
-       T->Add(rootfile_dir+Form("PMTSh_Optics1_beam_magOFF/PMTSh_Optics1_beam_magOFF_%d.root",fileSplit));
+       T->Add(rootfile_dir+Form("LH2_beam_magOFF/LH2_beam_magOFF_%d.root",fileSplit));
    }
    cout<<Form("Found %d number of file splits!",nfileSplit)<<endl;
    Long64_t nentry = T->GetEntries();
@@ -50,7 +50,7 @@ void ds_scanner_radial_dist_beam(){
          energy = fHit->at(pk).e;
          hitr = fHit->at(pk).r;
          rate = 1;
-        if(detector==176 && energy>1 && hitr>0 && pid==2112){
+        if(detector==176 && energy>1 && hitr>0 && pid==11){
           h_rate->Fill(hitr,rate);
         }
       }
@@ -67,11 +67,11 @@ void ds_scanner_radial_dist_beam(){
    latex.SetNDC(1);
    latex.SetTextSize(0.04);
    TCanvas* c_rate_linear = new TCanvas("c_rate_linear");
-   h_rate->SetTitle("Radial Distribution of Neutrons at Downstream Linear Scanner location with Magnet Off");
+   h_rate->SetTitle("Radial Distribution of Electrons at Downstream Linear Scanner location with Magnet Off");
    h_rate->Draw("hist");
    h_rateQ->Draw("hist same");
    latex.SetTextColor(1);
-   latex.DrawLatex(0.55,0.85,"beam generator");
+   latex.DrawLatex(0.55,0.85,"beam generator (LH2 target)");
    latex.SetTextColor(2);
    latex.DrawLatex(0.55,0.80,"ds scanner acceptance");
    c_rate_linear->SaveAs("./temp/ds_scanner_linear.pdf");
@@ -81,12 +81,12 @@ void ds_scanner_radial_dist_beam(){
    h_rate->Draw("hist");
    h_rateQ->Draw("hist same");
    latex.SetTextColor(1);
-   latex.DrawLatex(0.55,0.86,"beam generator");
+   latex.DrawLatex(0.55,0.86,"beam generator (LH2 target)");
    latex.SetTextColor(2);
    latex.DrawLatex(0.55,0.82,"ds scanner acceptance");
    c_rate_log->SaveAs("./temp/ds_scanner_log.pdf");
 
 //Now combine all pdf files saved in ./temp/ directory and save a single pdf file in ./plots/ directory
-   gSystem->Exec(Form("pdfunite ./temp/ds_scanner_*.pdf ./plots/PMTSh_beam_magOFF_neutrons_ds_scanner_test.pdf"));
+   gSystem->Exec(Form("pdfunite ./temp/ds_scanner_*.pdf ./plots/defaultGeo_beam_magOFF_electrons_ds_scanner_LH2.pdf"));
    gSystem->Exec(Form("rm -rf ./temp/ds_scanner_*.pdf"));
 }

@@ -1,4 +1,5 @@
-#include "remolltypes.hh"
+//
+#include "../remolltypes.hh"
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -48,7 +49,7 @@ void sam_pmt_energy_dist_beam(){
       h_R[ihist]->SetLineColor(color[ihist]);
       h_E[ihist]->SetLineColor(color[ihist]);
       h_R[ihist]->Sumw2();
-      h_E[ihist]->Sumw2(kTRUE);
+      h_E[ihist]->Sumw2();
       niceLogXBins(h_E[ihist]);
    }
    TChain* T = new TChain("T");
@@ -68,7 +69,7 @@ void sam_pmt_energy_dist_beam(){
    std::vector<remollGenericDetectorHit_t> *fHit =0;
    T->SetBranchAddress("hit", &fHit);
    
-   Double_t hitr, asym, rate, trid, kinE;
+   Double_t energy, hitr, asym, rate, trid;
    Int_t detector, pid;
    for(int ientry=0;ientry<nentry;ientry++){
       if(ientry%(nentry/10)==0)
@@ -77,34 +78,34 @@ void sam_pmt_energy_dist_beam(){
       for(size_t pk=0;pk<fHit->size();pk++){
          pid = (Int_t)TMath::Abs(fHit->at(pk).pid);
          detector = fHit->at(pk).det;
-         kinE = fHit->at(pk).k;
+         energy = fHit->at(pk).p;
          hitr = fHit->at(pk).r;
          trid = fHit->at(pk).trid;
          rate = 1;
-        if(detector==176 && (hitr>rmin && hitr<rmax)){
+        if(detector==176 && hitr>rmin && hitr<rmax){
           if(pid==22){
             h_R[0]->Fill(hitr,rate);
-            h_E[0]->Fill(kinE,rate);
+            h_E[0]->Fill(energy,rate);
           }
           if(pid==11 || pid==-211){
             h_R[1]->Fill(hitr,rate);
-            h_E[1]->Fill(kinE,rate);
+            h_E[1]->Fill(energy,rate);
           }
           if(pid==-11 || pid==211){
             h_R[2]->Fill(hitr,rate);
-            h_E[2]->Fill(kinE,rate);
+            h_E[2]->Fill(energy,rate);
           }
           if(pid==2112){
             h_R[3]->Fill(hitr,rate);
-            h_E[3]->Fill(kinE,rate);
+            h_E[3]->Fill(energy,rate);
           }
-          if((pid==11 || pid==-11) && kinE>1){
+          if((pid==11 || pid==-11) && energy>1){
             h_R[4]->Fill(hitr,rate);
-            h_E[4]->Fill(kinE,rate);
+            h_E[4]->Fill(energy,rate);
           }
-          if(pid==11 && trid==1 && kinE>1){
+          if(trid==1 && energy>1){
             h_R[5]->Fill(hitr,rate);
-            h_E[5]->Fill(kinE,rate);
+            h_E[5]->Fill(energy,rate);
           }
         }
       }
@@ -120,10 +121,7 @@ void sam_pmt_energy_dist_beam(){
    gPad->SetLogy();
    for(int ihist=0;ihist<nhist;ihist++){
       h_R[ihist]->SetTitle("Radial Distribution at SAM PMT Region (beam generator)");
-      if(ihist==0)
-         h_R[ihist]->Draw("h");
-      else
-         h_R[ihist]->Draw("same&&h");
+      h_R[ihist]->Draw("hist same");
       h_R[ihist]->GetYaxis()->SetRangeUser(1.e-9,1.e-2);
       latex.SetTextColor(color[ihist]);
       if(ihist<3)
@@ -134,17 +132,14 @@ void sam_pmt_energy_dist_beam(){
    latex.SetTextColor(kRed+3);
    latex.DrawLatex(0.12,0.85,"Radial Cut::");
    latex.DrawLatex(0.12,0.80,Form("(%.0f,%.0f)mm",rmin,rmax));
-   c_R->SaveAs("./temp/sam_pmt_kinE_radial.pdf");
+   c_R->SaveAs("./temp/sam_pmt_mom_radial.pdf");
 
-   TCanvas* c_E = new TCanvas("c_E","",1200,400);
+   TCanvas* c_E = new TCanvas("c_E");
    gPad->SetLogy();
    gPad->SetLogx();
    for(int ihist=0;ihist<nhist;ihist++){
       h_E[ihist]->SetTitle("Energy Distribution at SAM PMT Region (beam generator)");
-      if(ihist==0)
-        h_E[ihist]->DrawCopy("h");
-      else
-        h_E[ihist]->DrawCopy("h&&same");
+      h_E[ihist]->Draw("hist same");
       h_E[ihist]->GetYaxis()->SetRangeUser(1.e-9,1.e-2);
       latex.SetTextColor(color[ihist]);
       if(ihist<3)
@@ -155,9 +150,9 @@ void sam_pmt_energy_dist_beam(){
    latex.SetTextColor(kRed+3);
    latex.DrawLatex(0.12,0.85,"Radial Cut::");
    latex.DrawLatex(0.12,0.80,Form("(%.0f,%.0f)mm",rmin,rmax));
-   c_E->SaveAs("./temp/sam_pmt_kinE.pdf");
+   c_E->SaveAs("./temp/sam_pmt_mom.pdf");
 
-   gSystem->Exec(Form("pdfunite ./temp/sam_pmt_kinE*.pdf ./plots/PMTSh_beam_sam_pmt_kinE.pdf"));
-   gSystem->Exec(Form("rm -rf ./temp/sam_pmt_kinE*.pdf"));
+   gSystem->Exec(Form("pdfunite ./temp/sam_pmt_mom*.pdf ./plots/PMTSh_beam_sam_pmt_mom.pdf"));
+   gSystem->Exec(Form("rm -rf ./temp/sam_pmt_mom*.pdf"));
 
 }
