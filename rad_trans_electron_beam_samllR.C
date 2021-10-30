@@ -1,6 +1,6 @@
 //plot radial and transverse hit distribution on ring5, lam, usscanner, and dsscanner plane
 //
-#include "../remolltypes.hh"
+#include "remolltypes.hh"
 #include <string>
 #include <sstream>
 #include <iostream>

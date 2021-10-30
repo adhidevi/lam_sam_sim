@@ -1,6 +1,6 @@
 //plot energy distribution sam plane
 //
-#include "../remolltypes.hh"
+#include "remolltypes.hh"
 #include <string>
 #include <sstream>
 #include <iostream>
