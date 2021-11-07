@@ -17,9 +17,8 @@
     TH1D* eRate[nSp][nDet];
     void niceLogBins(TH1*);
     TFile* outfile; 
-void energy_dist(){
+void energy_distribution(){
    gStyle->SetOptStat(0);
-   gStyle->SetErrorX(0.0);
    for(int iSp=0;iSp<nSp;iSp++){
    for(int iDet=0;iDet<nDet;iDet++){
       eRate[iSp][iDet] = new TH1D(Form("%s_E_%s",detH[iDet].c_str(),spH[iSp].c_str()),Form("Kinetic Energy at PMT region for %s (beam generator);E (MeV);hits/%sthrownEvents",detH[iDet].c_str(),"#"),121,-8,5);
@@ -78,7 +77,7 @@ void energy_dist(){
           eRate[iSp][iDet]->GetYaxis()->SetRangeUser(1.0e-9,1.0e-2);
           eRate[iSp][iDet]->SetMarkerStyle(20);
           eRate[iSp][iDet]->SetMarkerSize(0.5);
-//          eRate[iSp][iDet]->Draw("hist same");
+          eRate[iSp][iDet]->Draw("hist same");
           eRate[iSp][iDet]->Write();
           latex.SetTextColor(color[iSp]);
           if(iSp<3)
@@ -89,10 +88,10 @@ void energy_dist(){
     latex.SetTextColor(kRed+3);
     latex.DrawLatex(0.12,0.85,"Radial Cut::");
     latex.DrawLatex(0.12,0.80,Form("[%.0f,%.0f]mm",rmin[iDet],rmax[iDet]));
-//    c_E[iDet]->SaveAs(Form("./temp/kinetic_energy_det%d.pdf",Det[iDet]));
+    c_E[iDet]->SaveAs(Form("./temp/kinetic_energy_det%d.pdf",Det[iDet]));
     }
-//    gSystem->Exec(Form("pdfunite ./temp/kinetic_energy_det*.pdf ./plots/PMTSh_beam_kinE_det%d_det%d.pdf",Det[0],Det[1]));
-//    gSystem->Exec(Form("rm -rf ./temp/kinetic_energy_det*.pdf"));
+    gSystem->Exec(Form("pdfunite ./temp/kinetic_energy_det*.pdf ./plots/PMTSh_beam_kinE_det%d_det%d.pdf",Det[0],Det[1]));
+    gSystem->Exec(Form("rm -rf ./temp/kinetic_energy_det*.pdf"));
 
 }
 

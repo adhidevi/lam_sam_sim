@@ -1,126 +1,206 @@
+//This macro produces radial distribution for a given detector and given species and integrates within the given radial extent.
+//
 #include "remolltypes.hh"
+#include <sstream>
+#include <iostream>
+#include <fstream>
 void Optics1_vs_LH2_compare(){
-   gStyle->SetTitleYOffset(1.3);
+   gROOT->Reset();
    gStyle->SetOptStat(0);
-   TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/default-geo";
-   TString file[] = {"LH2_beam","Optics1_beam"};
-   const int nfile = sizeof(file)/sizeof(*file);
-   TString sim[nfile] = {"LH2","Optics1"};
-   TH1D* hist[nfile];
-   TH1D* histR5[nfile];
-   const int color[nfile] = {1,2};
-   const int colorR5[nfile] = {4,6};
-   const double rmin = 920;
-   const double rmax = 1060;
+   gStyle->SetTitleYOffset(1.3);
+   gStyle->SetPadGridX(1);
+   gStyle->SetPadGridY(1);
+   TGaxis::SetMaxDigits(3);
+   const string spTit[] = {"e-/#pi-","e+/#pi+","#gamma","neutron","e-/e+ E>1","primary e E>1"};
+   const int nSp = sizeof(spTit)/sizeof(*spTit);
+   const string spH[nSp] = {"epiM","epiP","g","n","ee1","pri1"};
+   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
+
+   const int Det = 28;
+   map<int,int> dtM {{28,1}};
+   const int x_min = 0;
+   const int x_max = 1500;
+   const int nbins = 500;
+   double bin_width = (x_max-x_min)/nbins;
+   const double r_min = 920;
+   const double r_max = 1060;
    
-   const int xmin = 0;
-   const int xmax = 1500;
-   const int nbins = 200;
-   Long64_t nentry;
+   int beamGen(1);//Change this if using physics generators
+   const string geometry = "defaultGeo";//defaultGeo or PMTSh
+   const string sim[] = {"LH2_beam","Optics1_beam"};
+   const int nsim = sizeof(sim)/sizeof(*sim);
+   TH1D* h_rate[nsim][nSp];
+   TH1D* h_rateQ[nsim][nSp];
 
-   for(int ifile=0;ifile<nfile;ifile++){
-      hist[ifile] = new TH1D(Form("%s",sim[ifile].Data()),Form("Radial Distribution at Ring 5;Radius (mm); hits/%sthrownEvents)","#"),nbins,xmin,xmax);
-      histR5[ifile] = new TH1D(Form("%s_R5",sim[ifile].Data()),Form("Radial Distribution at Ring 5;Radius (mm); hits/%sthrownEvents)","#"),nbins,xmin,xmax);
-      hist[ifile]->SetLineColor(color[ifile]);
-      histR5[ifile]->SetLineColor(colorR5[ifile]);
-      hist[ifile]->Sumw2();
-      histR5[ifile]->Sumw2();
-      
+   TFile *outfile = new TFile(Form("./rootfiles/%s_%s_%s_det%d_radial.root",geometry.c_str(),sim[0].c_str(),sim[1].c_str(),Det),"recreate");
+   
+   string rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/default-geo";
+   
+   Long64_t nentry[nsim]={0,0};
+   int nfile[nsim] = {0,0};
+
+   for(int isim=0;isim<nsim;isim++){
+    for(int iSp=0;iSp<nSp;iSp++){
+      h_rate[isim][iSp] = new TH1D(Form("det%d_%s_%s",Det,spH[iSp].c_str(),sim[isim].c_str()),Form("Radial Distribution of %s at det%d;Radius (mm); hits/%sthrownEvents)",spTit[iSp].c_str(),Det,"#"),nbins,x_min,x_max);
+      h_rateQ[isim][iSp] = new TH1D(Form("det%dQ_%s_%s",Det,spH[iSp].c_str(),sim[isim].c_str()),Form("Radial Distribution of %s at det%d;Radius (mm); hits/%sthrownEvents)",spTit[iSp].c_str(),Det,"#"),nbins,x_min,x_max);
+      h_rate[isim][iSp]->Sumw2();
+      h_rateQ[isim][iSp]->Sumw2();
+    }
+
       TChain* T = new TChain("T");
-      int nsplit = 0;
-      for(int isplit=1001;isplit<=1927;isplit++){
-         nsplit++;
-         T->Add(Form("%s/%s/%s_%d.root",rootfile_dir.Data(),file[ifile].Data(),file[ifile].Data(),isplit));
+      for(int ifile=1001;ifile<=2000;ifile++){
+         string infile = Form("%s/%s/%s_%d.root",rootfile_dir.c_str(),sim[isim].c_str(),sim[isim].c_str(),ifile);
+         TFile *fin = new TFile(infile.c_str(),"READ");
+         if(!fin->IsOpen() || fin->IsZombie()){
+           cout<<"Problem: can't find file: "<<infile<<endl;
+           continue;
+         }else if(fin->TestBit(TFile::kRecovered)){
+           cout<<"Problem: Recovered file: "<<infile<<endl;
+           continue;
+         }
+         nfile[isim]++;
+         T->Add(Form("%s",infile.c_str()));
       }
-      cout<<Form("Found %d file splits!!!",nsplit)<<endl;
-      nentry = T->GetEntries();
-      std::vector<remollGenericDetectorHit_t> *fHit = 0;
-      remollEvent_t *fEv = 0;
-      Double_t fRate = 0;
+      cout<<Form("Found %d file splits!!!",nfile[isim])<<endl;
 
-      T->SetBranchAddress("hit", &fHit);
+      nentry[isim] = T->GetEntries();
+      cout<<Form("Total number of entries to be analyzed: %lld",nentry[isim])<<endl;
 
-      Double_t energy, hitr, rate, beamp, kinE;
-      Int_t detector, pid;
-      for(int ientry=0;ientry<nentry;ientry++){
-         if(ientry%(nentry/10)==0)
-            cout<<Form("Analyzed %d events!!!",ientry)<<endl;
+      std::vector<remollGenericDetectorHit_t> *hit = 0;
+      std::vector<remollEventParticle_t> *part = 0;
+      remollBeamTarget_t *bm = 0;
+      remollEvent_t *ev = 0;
+      Double_t rate = 0;
+
+      T->SetBranchAddress("hit", &hit);
+      T->SetBranchAddress("part", &part);
+      T->SetBranchAddress("bm", &bm);
+      T->SetBranchAddress("ev", &ev);
+      T->SetBranchAddress("rate", &rate);
+
+      for(Long64_t ientry=0;ientry<nentry[isim];ientry++){
          T->GetEntry(ientry);
-         for(size_t pk=0;pk<fHit->size();pk++){
-            pid = (Int_t)fHit->at(pk).pid;
-            detector = fHit->at(pk).det;
-            energy = fHit->at(pk).e;
-            kinE = fHit->at(pk).k;
-            hitr = fHit->at(pk).r;
-            rate = 1;
-            if(detector==28 && kinE>1 && hitr>0 && pid==11){
-              hist[ifile]->Fill(hitr,rate);
-              if(hitr>=rmin && hitr<=rmax){
-                histR5[ifile]->Fill(hitr,rate);
-              }
+         if(ientry%(nentry[isim]/10)==0)
+            cout<<Form("Analyzed %lld events!!!",ientry)<<endl;
+         for(size_t j=0;j<hit->size();j++){
+            if(std::isnan(rate) || std::isinf(rate)) continue;
+            if(beamGen) rate = 1.0;
+
+            int sp = spM[int(hit->at(j).pid)]-1;
+            if(sp==-1) continue;
+            int dt = dtM[int(hit->at(j).det)]-1;
+            if(dt==-1) continue;
+
+            h_rate[isim][sp]->Fill(hit->at(j).r,rate);
+
+            if(hit->at(j).r>=r_min && hit->at(j).r<=r_max)
+              h_rateQ[isim][sp]->Fill(hit->at(j).r,rate);
+            
+            if(hit->at(j).k>1 && (hit->at(j).pid==11 || hit->at(j).pid==-11)){
+              h_rate[isim][4]->Fill(hit->at(j).r,rate);
+              if(hit->at(j).r>=r_min && hit->at(j).r<=r_max)
+                h_rateQ[isim][4]->Fill(hit->at(j).r,rate);
+            }
+            if(hit->at(j).k>1 && hit->at(j).trid==1){
+              h_rate[isim][5]->Fill(hit->at(j).r,rate);
+              if(hit->at(j).r>=r_min && hit->at(j).r<=r_max)
+                h_rateQ[isim][5]->Fill(hit->at(j).r,rate);
             }
          }
       }
    }
+
+   TH1D* h_rateCpy[nsim][nSp];
+   int r_elastic_min = 690;
+   int r_elastic_max = 780;
+   for(int isim=0;isim<nsim;isim++){
+      outfile->mkdir(Form("%s",sim[isim].c_str()));
+      outfile->cd(Form("%s",sim[isim].c_str()));
+      for(int iSp=0;iSp<nSp;iSp++){
+       if(beamGen){
+         h_rate[isim][iSp]->Scale(1./nentry[isim]);
+         h_rateQ[isim][iSp]->Scale(1./nentry[isim]);
+       }else{
+         h_rate[isim][iSp]->Scale(1./nfile[isim]);
+         h_rateQ[isim][iSp]->Scale(1./nfile[isim]);
+       }   
+       h_rate[isim][iSp]->Write();
+       h_rateQ[isim][iSp]->Write();
+       h_rateCpy[isim][iSp] = (TH1D*)h_rate[isim][iSp]->Clone(Form("det%dCpy_%s_%s",Det,spH[iSp].c_str(),sim[isim].c_str()));
+       h_rateCpy[isim][iSp]->GetXaxis()->SetRangeUser(r_elastic_min,r_elastic_max);
+      }
+   }
+
+   int color[nsim][nSp] = {{2,3,1,4,6,7},{8,9,40,41,42,43}};
    
    TLatex latex;
    latex.SetNDC();
    latex.SetTextSize(0.04);
-   TCanvas* c_linear = new TCanvas("c_linear");
-   hist[0]->SetTitle("Radial Distribution of Electrons at Ring 5");
-   hist[0]->Scale(1./nentry);
-   hist[1]->Scale(1./nentry);
-   histR5[0]->Scale(1./nentry);
-   histR5[1]->Scale(1./nentry);
-   hist[0]->Draw("hist");
-   hist[0]->GetYaxis()->SetRangeUser(1.5e-8,1.0);
-   hist[1]->Draw("hist sames");
-   histR5[0]->Draw("hist sames");
-   histR5[1]->Draw("hist sames");
-   latex.SetTextColor(color[0]);
-   latex.DrawLatex(0.40,0.85,Form("LH2"));
-   latex.SetTextColor(color[1]);
-   latex.DrawLatex(0.40,0.80,Form("Optics1"));
-   latex.SetTextColor(colorR5[0]);
-   latex.DrawLatex(0.50,0.85,Form("Ring 5 ingetral: %.3e",histR5[0]->Integral()));
-   latex.SetTextColor(colorR5[1]);
-   latex.DrawLatex(0.50,0.80,Form("Ring 5 ingetral: %.3e",histR5[1]->Integral()));
-/*
-   gPad->Update();
-   TPaveStats* st1 = (TPaveStats*)hist[0]->FindObject("stats");
-   TPaveStats* st2 = (TPaveStats*)hist[1]->FindObject("stats");
-   st1->SetTextColor(color[0]);
-   st2->SetTextColor(color[1]);
-   st1->SetX1NDC(0.75);
-   st1->SetX2NDC(0.90);
-   st2->SetX1NDC(0.75);
-   st2->SetX2NDC(0.90);
-   st1->SetY1NDC(0.75);
-   st1->SetY2NDC(0.90);
-   st2->SetY1NDC(0.60);
-   st2->SetY2NDC(0.75);
-   st1->SetFillStyle(0);
-   st2->SetFillStyle(0);
-   gPad->Modified();
-*/
-   c_linear->SaveAs("./temp/ring5_linear.pdf");
 
-   TCanvas* c_log = new TCanvas("c_log");
-   gPad->SetLogy();
-   hist[0]->Draw("hist");
-   hist[1]->Draw("hist sames");
-   histR5[0]->Draw("hist sames");
-   histR5[1]->Draw("hist sames");
-   latex.SetTextColor(color[0]);
-   latex.DrawLatex(0.40,0.85,Form("LH2"));
-   latex.SetTextColor(color[1]);
-   latex.DrawLatex(0.40,0.80,Form("Optics1"));
-   latex.SetTextColor(colorR5[0]);
-   latex.DrawLatex(0.50,0.85,Form("Ring 5 ingetral: %.3e",histR5[0]->Integral()));
-   latex.SetTextColor(colorR5[1]);
-   latex.DrawLatex(0.50,0.80,Form("Ring 5 ingetral: %.3e",histR5[1]->Integral()));
-   c_log->SaveAs("./temp/ring5_log.pdf");
+   for(int isim=0;isim<nsim;isim++){
+     for(int iSp=0;iSp<nSp;iSp++){
+        h_rate[isim][iSp]->SetLineColor(color[isim][iSp]);
+        h_rateQ[isim][iSp]->SetLineColor(color[isim][iSp]);
+        h_rateCpy[isim][iSp]->SetLineColor(color[isim][iSp]);
+     }
+   }
+
+   TCanvas* c_r_lin[nSp];
+   for(int iSp=0;iSp<nSp;iSp++){
+     c_r_lin[iSp] = new TCanvas(Form("c_r_lin_%s",spH[iSp].c_str()));
+     h_rate[0][iSp]->Draw("hist");
+     h_rate[0][iSp]->GetYaxis()->SetRangeUser(1.5e-8,1.0);
+     h_rate[1][iSp]->Draw("hist sames");
+     h_rateQ[0][iSp]->Draw("hist sames");
+     h_rateQ[1][iSp]->Draw("hist sames");
+     h_rateCpy[0][iSp]->Draw("hist sames");
+     h_rateCpy[1][iSp]->Draw("hist sames");
+
+     latex.SetTextColor(color[0][iSp]);
+     latex.DrawLatex(0.35,0.85,Form("LH2"));
+     latex.SetTextColor(color[1][iSp]);
+     latex.DrawLatex(0.35,0.80,Form("Optics1"));
+     latex.SetTextColor(color[0][iSp]);
+     latex.DrawLatex(0.51,0.85,Form("det%d ingetral: %.3e",Det,h_rateQ[0][iSp]->Integral()));
+     latex.SetTextColor(color[1][iSp]);
+     latex.DrawLatex(0.51,0.80,Form("det%d ingetral: %.3e",Det,h_rateQ[1][iSp]->Integral()));
+
+     latex.SetTextColor(color[0][iSp]);
+     latex.DrawLatex(0.51,0.75,Form("%d<=r<=%d ingetral: %.3e",r_elastic_min,r_elastic_max,h_rateCpy[0][iSp]->Integral()));
+     latex.SetTextColor(color[1][iSp]);
+     latex.DrawLatex(0.51,0.70,Form("%d<=r<=%d ingetral: %.3e",r_elastic_min,r_elastic_max,h_rateCpy[1][iSp]->Integral()));
+
+     c_r_lin[iSp]->SaveAs(Form("./temp/det%d_lin_%s.pdf",Det,spH[iSp].c_str()));
+   }
+   TCanvas* c_r_log[nSp];
+   for(int iSp=0;iSp<nSp;iSp++){
+     c_r_log[iSp] = new TCanvas(Form("c_r_log_%s",spH[iSp].c_str()));
+     gPad->SetLogy();
+     h_rate[0][iSp]->Draw("hist");
+     h_rate[0][iSp]->GetYaxis()->SetRangeUser(1.5e-8,1.0);
+     h_rate[1][iSp]->Draw("hist sames");
+     h_rateQ[0][iSp]->Draw("hist sames");
+     h_rateQ[1][iSp]->Draw("hist sames");
+     h_rateCpy[0][iSp]->Draw("hist sames");
+     h_rateCpy[1][iSp]->Draw("hist sames");
+
+     latex.SetTextColor(color[0][iSp]);
+     latex.DrawLatex(0.35,0.85,Form("LH2"));
+     latex.SetTextColor(color[1][iSp]);
+     latex.DrawLatex(0.35,0.80,Form("Optics1"));
+     latex.SetTextColor(color[0][iSp]);
+     latex.DrawLatex(0.51,0.85,Form("det%d ingetral: %.3e",Det,h_rateQ[0][iSp]->Integral()));
+     latex.SetTextColor(color[1][iSp]);
+     latex.DrawLatex(0.51,0.80,Form("det%d ingetral: %.3e",Det,h_rateQ[1][iSp]->Integral()));
+
+     latex.SetTextColor(color[0][iSp]);
+     latex.DrawLatex(0.51,0.75,Form("%d<=r<=%d ingetral: %.3e",r_elastic_min,r_elastic_max,h_rateCpy[0][iSp]->Integral()));
+     latex.SetTextColor(color[1][iSp]);
+     latex.DrawLatex(0.51,0.70,Form("%d<=r<=%d ingetral: %.3e",r_elastic_min,r_elastic_max,h_rateCpy[1][iSp]->Integral()));
+
+     c_r_log[iSp]->SaveAs(Form("./temp/det%d_log_%s.pdf",Det,spH[iSp].c_str()));
+   }
    
-   gSystem->Exec(Form("pdfunite ./temp/ring5_*.pdf ./plots/defaultGeo_LH2_Optics1_ring5.pdf"));
-   gSystem->Exec(Form("rm -rf ./temp/ring5_*.pdf"));
+   gSystem->Exec(Form("pdfunite ./temp/det%d_*.pdf ./plots/%s_%s_%s_det%d_radial.pdf",Det,geometry.c_str(),sim[0].c_str(),sim[1].c_str(),Det));
+   gSystem->Exec(Form("rm -rf ./temp/det%d_*.pdf",Det));
 }

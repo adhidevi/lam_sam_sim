@@ -15,11 +15,11 @@ void rad_rate_forwardVSbackward_electrons(){
    TGaxis::SetMaxDigits(3);
 
    int x_min = 0;
-   int x_max = 1000;
-   int nbin = 500;
+   int x_max = 1500;
+   int nbin = 200;
    int beam_curr = 65;
 
-   TString rootfile_dir = "$VOLATILE/remoll_rootfiles/PhotonBlocker";
+   TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/PMTShielding";
    
    TH1F* h_pzAll = new TH1F("h_pzAll",Form("%s dist. on %s det plane;Radius (mm);hits/%sthrownEvents","Radial","SAM","#"),nbin,x_min,x_max);
    TH1F* h_pzG0 = new TH1F("h_pzG0",Form("%s dist. on %s det plane;Radius (mm);hits/%sthrownEvents","Radial","SAM","#"),nbin,x_min,x_max);
@@ -42,10 +42,14 @@ void rad_rate_forwardVSbackward_electrons(){
    h_pzL0_sam->Sumw2();
    TChain* T = new TChain("T");
    int nfile = 0;
-   for(int ifile = 1001;ifile<=2000;ifile++){
+   for(int ifile = 1001;ifile<=1010;ifile++){
+      string infile(Form("%s/PMTSh_beam_V3/PMTSh_beam_V3_%d.root",rootfile_dir.Data(),ifile));
+      ifstream filename(infile);
+      if(!filename) continue;
       nfile++;
-      T->Add(Form("%s/pB_beam/pB_beam_%d.root",rootfile_dir.Data(),ifile));
+      T->Add(Form("%s",infile.c_str()));
    }
+
    cout<<Form("Found %d file splits!!!",nfile)<<endl;
 
    Long64_t nentry = T->GetEntries();
@@ -123,6 +127,6 @@ void rad_rate_forwardVSbackward_electrons(){
    c_rate_log->SaveAs("./temp/p_rate_log.pdf");
 
 //Now combine all pdf files saved in ./temp/ directory and save a single pdf file in ./plots/ directory
-   gSystem->Exec(Form("pdfunite ./temp/*.pdf ./plots/rad_rate_forwardVSbackward_electrons.pdf"));
+   gSystem->Exec(Form("pdfunite ./temp/*.pdf ./plots/PMTSh_beam_V3_forwardVSbackward_electrons.pdf"));
    gSystem->Exec(Form("rm -rf ./temp/*.pdf"));
 }
