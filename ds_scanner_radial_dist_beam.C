@@ -19,19 +19,19 @@ void ds_scanner_radial_dist_beam(){
 
    TString rootfile_dir = "$VOLATILE/remoll_rootfiles/default-geo/";
    
-   double x_min = 0;
+   double x_min = 200;
    double x_max = 1000;
    int nbin=200;
    double bin_width = (x_max-x_min)/nbin;
-   TH1F* h_rate = new TH1F(Form("h_rate"),Form("%s dist. on ds scanner plane (beam gen);Radius (mm);hits/#thrownEvents/%.1fmm","Radial",bin_width),nbin,x_min,x_max);
+   TH1F* h_rate = new TH1F(Form("h_rate"),Form("Radial dist. on ds scanner plane (beam gen);Radius (mm);hits/#thrownEvents/%.1fmm",bin_width),nbin,x_min,x_max);
    h_rate->SetLineColor(1);
    h_rate->Sumw2();
 
    TChain* T = new TChain("T");
    int nfileSplit=0;
-   for(int fileSplit=1001;fileSplit<=2000;fileSplit++){
+   for(int fileSplit=1001;fileSplit<=6000;fileSplit++){
        nfileSplit++;
-       T->Add(rootfile_dir+Form("LH2_beam_magOFF/LH2_beam_magOFF_%d.root",fileSplit));
+       T->Add(rootfile_dir+Form("Optics1_beam_magOFF_V5/Optics1_beam_magOFF_V5_%d.root",fileSplit));
    }
    cout<<Form("Found %d number of file splits!",nfileSplit)<<endl;
    Long64_t nentry = T->GetEntries();
@@ -47,10 +47,10 @@ void ds_scanner_radial_dist_beam(){
       for(size_t pk=0;pk<fHit->size();pk++){
          pid = (Int_t)TMath::Abs(fHit->at(pk).pid);
          detector = fHit->at(pk).det;
-         energy = fHit->at(pk).e;
+         energy = fHit->at(pk).k;
          hitr = fHit->at(pk).r;
          rate = 1;
-        if(detector==176 && energy>1 && hitr>0 && pid==11){
+        if(detector==176 && energy>1 && (hitr>200 && hitr<1000) && pid==11){
           h_rate->Fill(hitr,rate);
         }
       }
@@ -71,9 +71,9 @@ void ds_scanner_radial_dist_beam(){
    h_rate->Draw("hist");
    h_rateQ->Draw("hist same");
    latex.SetTextColor(1);
-   latex.DrawLatex(0.55,0.85,"beam generator (LH2 target)");
+   latex.DrawLatex(0.45,0.85,"beam generator (Optics1 DSC target)");
    latex.SetTextColor(2);
-   latex.DrawLatex(0.55,0.80,"ds scanner acceptance");
+   latex.DrawLatex(0.45,0.80,"ds scanner acceptance");
    c_rate_linear->SaveAs("./temp/ds_scanner_linear.pdf");
 
    TCanvas* c_rate_log = new TCanvas("c_rate_log");
@@ -81,12 +81,12 @@ void ds_scanner_radial_dist_beam(){
    h_rate->Draw("hist");
    h_rateQ->Draw("hist same");
    latex.SetTextColor(1);
-   latex.DrawLatex(0.55,0.86,"beam generator (LH2 target)");
+   latex.DrawLatex(0.45,0.86,"beam generator (Optics1 DSC target)");
    latex.SetTextColor(2);
-   latex.DrawLatex(0.55,0.82,"ds scanner acceptance");
+   latex.DrawLatex(0.45,0.82,"ds scanner acceptance");
    c_rate_log->SaveAs("./temp/ds_scanner_log.pdf");
 
 //Now combine all pdf files saved in ./temp/ directory and save a single pdf file in ./plots/ directory
-   gSystem->Exec(Form("pdfunite ./temp/ds_scanner_*.pdf ./plots/defaultGeo_beam_magOFF_electrons_ds_scanner_LH2.pdf"));
+   gSystem->Exec(Form("pdfunite ./temp/ds_scanner_*.pdf ./plots/defaultGeo_electrons_ds_scanner_Optics1_beam_magOFF_V5.pdf"));
    gSystem->Exec(Form("rm -rf ./temp/ds_scanner_*.pdf"));
 }

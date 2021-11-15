@@ -22,12 +22,12 @@ void Optics1_vs_LH2_compare(){
    const int x_max = 1500;
    const int nbins = 500;
    double bin_width = (x_max-x_min)/nbins;
-   const double r_min = 920;
-   const double r_max = 1060;
+   const int r_min = 920;
+   const int r_max = 1060;
    
    int beamGen(1);//Change this if using physics generators
    const string geometry = "defaultGeo";//defaultGeo or PMTSh
-   const string sim[] = {"LH2_beam","Optics1_beam"};
+   const string sim[] = {"Optics1_beam","Optics1_beam_magON_V4"};
    const int nsim = sizeof(sim)/sizeof(*sim);
    TH1D* h_rate[nsim][nSp];
    TH1D* h_rateQ[nsim][nSp];
@@ -61,10 +61,10 @@ void Optics1_vs_LH2_compare(){
          nfile[isim]++;
          T->Add(Form("%s",infile.c_str()));
       }
-      cout<<Form("Found %d file splits!!!",nfile[isim])<<endl;
+      cout<<Form("Found %d file splits in %s!!!",nfile[isim],sim[isim].c_str())<<endl;
 
       nentry[isim] = T->GetEntries();
-      cout<<Form("Total number of entries to be analyzed: %lld",nentry[isim])<<endl;
+      cout<<Form("Total number of entries to be analyzed: %lld in %s",nentry[isim],sim[isim].c_str())<<endl;
 
       std::vector<remollGenericDetectorHit_t> *hit = 0;
       std::vector<remollEventParticle_t> *part = 0;
@@ -110,9 +110,6 @@ void Optics1_vs_LH2_compare(){
       }
    }
 
-   TH1D* h_rateCpy[nsim][nSp];
-   int r_elastic_min = 690;
-   int r_elastic_max = 780;
    for(int isim=0;isim<nsim;isim++){
       outfile->mkdir(Form("%s",sim[isim].c_str()));
       outfile->cd(Form("%s",sim[isim].c_str()));
@@ -126,8 +123,6 @@ void Optics1_vs_LH2_compare(){
        }   
        h_rate[isim][iSp]->Write();
        h_rateQ[isim][iSp]->Write();
-       h_rateCpy[isim][iSp] = (TH1D*)h_rate[isim][iSp]->Clone(Form("det%dCpy_%s_%s",Det,spH[iSp].c_str(),sim[isim].c_str()));
-       h_rateCpy[isim][iSp]->GetXaxis()->SetRangeUser(r_elastic_min,r_elastic_max);
       }
    }
 
@@ -137,10 +132,16 @@ void Optics1_vs_LH2_compare(){
    latex.SetNDC();
    latex.SetTextSize(0.04);
 
+   TH1D* h_rateCpy[nsim][nSp];
+   int r_elastic_min = 690;
+   int r_elastic_max = 780;
+
    for(int isim=0;isim<nsim;isim++){
      for(int iSp=0;iSp<nSp;iSp++){
         h_rate[isim][iSp]->SetLineColor(color[isim][iSp]);
         h_rateQ[isim][iSp]->SetLineColor(color[isim][iSp]);
+       h_rateCpy[isim][iSp] = (TH1D*)h_rate[isim][iSp]->Clone(Form("det%dCpy_%s_%s",Det,spH[iSp].c_str(),sim[isim].c_str()));
+       h_rateCpy[isim][iSp]->GetXaxis()->SetRangeUser(r_elastic_min,r_elastic_max);
         h_rateCpy[isim][iSp]->SetLineColor(color[isim][iSp]);
      }
    }
@@ -157,18 +158,18 @@ void Optics1_vs_LH2_compare(){
      h_rateCpy[1][iSp]->Draw("hist sames");
 
      latex.SetTextColor(color[0][iSp]);
-     latex.DrawLatex(0.35,0.85,Form("LH2"));
+     latex.DrawLatex(0.15,0.85,Form("%s",sim[0].c_str()));
      latex.SetTextColor(color[1][iSp]);
-     latex.DrawLatex(0.35,0.80,Form("Optics1"));
+     latex.DrawLatex(0.15,0.80,Form("%s",sim[1].c_str()));
      latex.SetTextColor(color[0][iSp]);
-     latex.DrawLatex(0.51,0.85,Form("det%d ingetral: %.3e",Det,h_rateQ[0][iSp]->Integral()));
+     latex.DrawLatex(0.51,0.85,Form("intg[%d<=r<=%d]: %.3e",r_min,r_max,h_rateQ[0][iSp]->Integral()));
      latex.SetTextColor(color[1][iSp]);
-     latex.DrawLatex(0.51,0.80,Form("det%d ingetral: %.3e",Det,h_rateQ[1][iSp]->Integral()));
+     latex.DrawLatex(0.51,0.80,Form("intg[%d<=r<=%d]: %.3e",r_min,r_max,h_rateQ[1][iSp]->Integral()));
 
      latex.SetTextColor(color[0][iSp]);
-     latex.DrawLatex(0.51,0.75,Form("%d<=r<=%d ingetral: %.3e",r_elastic_min,r_elastic_max,h_rateCpy[0][iSp]->Integral()));
+     latex.DrawLatex(0.51,0.75,Form("intg[%d<=r<=%d]: %.3e",r_elastic_min,r_elastic_max,h_rateCpy[0][iSp]->Integral()));
      latex.SetTextColor(color[1][iSp]);
-     latex.DrawLatex(0.51,0.70,Form("%d<=r<=%d ingetral: %.3e",r_elastic_min,r_elastic_max,h_rateCpy[1][iSp]->Integral()));
+     latex.DrawLatex(0.51,0.70,Form("intg[%d<=r<=%d]: %.3e",r_elastic_min,r_elastic_max,h_rateCpy[1][iSp]->Integral()));
 
      c_r_lin[iSp]->SaveAs(Form("./temp/det%d_lin_%s.pdf",Det,spH[iSp].c_str()));
    }
@@ -185,18 +186,18 @@ void Optics1_vs_LH2_compare(){
      h_rateCpy[1][iSp]->Draw("hist sames");
 
      latex.SetTextColor(color[0][iSp]);
-     latex.DrawLatex(0.35,0.85,Form("LH2"));
+     latex.DrawLatex(0.15,0.85,Form("%s",sim[0].c_str()));
      latex.SetTextColor(color[1][iSp]);
-     latex.DrawLatex(0.35,0.80,Form("Optics1"));
+     latex.DrawLatex(0.15,0.80,Form("%s",sim[1].c_str()));
      latex.SetTextColor(color[0][iSp]);
-     latex.DrawLatex(0.51,0.85,Form("det%d ingetral: %.3e",Det,h_rateQ[0][iSp]->Integral()));
+     latex.DrawLatex(0.51,0.85,Form("intg[%d<=r<=%d]: %.3e",r_min,r_max,h_rateQ[0][iSp]->Integral()));
      latex.SetTextColor(color[1][iSp]);
-     latex.DrawLatex(0.51,0.80,Form("det%d ingetral: %.3e",Det,h_rateQ[1][iSp]->Integral()));
+     latex.DrawLatex(0.51,0.80,Form("intg[%d<=r<=%d]: %.3e",r_min,r_max,h_rateQ[1][iSp]->Integral()));
 
      latex.SetTextColor(color[0][iSp]);
-     latex.DrawLatex(0.51,0.75,Form("%d<=r<=%d ingetral: %.3e",r_elastic_min,r_elastic_max,h_rateCpy[0][iSp]->Integral()));
+     latex.DrawLatex(0.51,0.75,Form("intg[%d<=r<=%d]: %.3e",r_elastic_min,r_elastic_max,h_rateCpy[0][iSp]->Integral()));
      latex.SetTextColor(color[1][iSp]);
-     latex.DrawLatex(0.51,0.70,Form("%d<=r<=%d ingetral: %.3e",r_elastic_min,r_elastic_max,h_rateCpy[1][iSp]->Integral()));
+     latex.DrawLatex(0.51,0.70,Form("intg[%d<=r<=%d]: %.3e",r_elastic_min,r_elastic_max,h_rateCpy[1][iSp]->Integral()));
 
      c_r_log[iSp]->SaveAs(Form("./temp/det%d_log_%s.pdf",Det,spH[iSp].c_str()));
    }
