@@ -63,12 +63,14 @@ void quick_radialNoCut_manyDet(){
 ///Change this line for appropriate rootfiles////
     string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
 //////////////////////////////////////////////
+    ifstream inf(infile.c_str());
+    if(!inf){
+      cout<<Form("Skipping %s. File doesn't exist.",infile.c_str())<<endl;
+      continue;
+    }
     TFile *fin = TFile::Open(infile.c_str(),"READ");
-    if(!fin->IsOpen() || fin->IsZombie()){
-      cout<<"Problem: can't find file: "<<infile<<endl;
-      fin->Close(); delete fin; return 0;
-    }else if(fin->TestBit(TFile::kRecovered)){
-      cout<<"Problem: Recovered file: "<<infile<<endl;
+    if(fin->TestBit(TFile::kRecovered)){
+      cout<<Form("Skipping %s. Recovered file.",infile.c_str())<<endl;
       fin->Close(); delete fin; return 0;
     }
     nfile++;

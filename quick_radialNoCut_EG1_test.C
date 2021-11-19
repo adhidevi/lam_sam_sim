@@ -3,7 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-void quick_radialNoCut_EG1(){
+void quick_radialNoCut_EG1_test(){
   gROOT->Reset();
   gStyle->SetOptStat(0);
   gStyle->SetTitleYOffset(1.3);
@@ -11,17 +11,17 @@ void quick_radialNoCut_EG1(){
   gStyle->SetPadGridY(1);
   TGaxis::SetMaxDigits(3);
   
-//  const string spTit[] = {"e-/#pi- E>1","e+/#pi+ E>1","#gamma E>1","neutron E>1","e-/e+ E>1"};
-  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all E"};
+  const string spTit[] = {"e-/#pi- E>1","e+/#pi+ E>1","#gamma E>1","neutron E>1","e-/e+ E>1"};
+//  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all E"};
   const int nSp = sizeof(spTit)/sizeof(*spTit);
   const string spH[nSp] = {"epiM","epiP","g","n","ee"};
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 
 ///Change the following lines for which detectors you want to include////
-  string detH[] = {"det173","det167","det168","det169","det170","det171","det172","det174","det175","det28","det30","det177","det176","det31"};
+  string detH[] = {"det173","det174","det175","det28","det30","det176","det31"};
   const int nDet = sizeof(detH)/sizeof(*detH);
-  const int Det[nDet] = {173,167,168,169,170,171,172,174,175,28,30,177,176,31};
-  map<int,int> dtM {{173,1},{167,2},{168,3},{169,4},{170,5},{171,6},{172,7},{174,8},{175,9},{28,10},{30,11},{177,12},{176,13},{31,14}};
+  const int Det[nDet] = {173,174,175,28,30,176,31};
+  map<int,int> dtM {{173,1},{174,2},{175,3},{28,4},{30,5},{176,6},{31,7}};
 ////////////////////////////////////////////////////////////////////////
 
   double x_min = 0;
@@ -33,15 +33,15 @@ void quick_radialNoCut_EG1(){
   TH1F* h_ratePzL0[nSp][nDet];
 
 ///Change the following lines as needed////
-  const string geometry = "defaultGeo";//defaultGeo or PMTSh
-  const string tgt_gen_config = "LH2_beam";
-  const string plotType = "radial_allE";//EG1 or allE
+  const string geometry = "PMTSh";//defaultGeo or PMTSh
+  const string tgt_gen_config = "PMTSh_beam_V3";
+  const string plotType = "radial_EG1";//EG1 or allE
   int beamGen(1);
 //////////////////////////////////////////
 
   TFile* outfile = new TFile(Form("./rootfiles/%s_%s_%s.root",geometry.c_str(),tgt_gen_config.c_str(),plotType.c_str()),"recreate");
 ///Change this line for appropriate rootfile directory////
-  TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/default-geo";
+  TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/PMTShielding";
 //////////////////////////////////////////////////////////
 
   for(int iSp=0;iSp<nSp;iSp++){
@@ -59,22 +59,23 @@ void quick_radialNoCut_EG1(){
   int nfile=0;
   Long64_t nentry=0;
   long nTotEv=0;
-  for(int ifile=1001;ifile<=1927;ifile++){
+  for(int ifile=1001;ifile<=2000;ifile++){
 ///Change this line for appropriate rootfiles////
-    string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
+    string fname = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
 //////////////////////////////////////////////
-    ifstream inf(infile.c_str());
-    if(!inf){
-      cout<<Form("Skipping %s. File doesn't exist.",infile.c_str())<<endl;
-      continue;
+    ifstream infile(fname.c_str());
+    if(!infile){
+      cout<<"Skipped file: "<<fname<<". It doesn't exist in the path"<<endl;
+      infile.close(); continue;
     }
-    TFile *fin = TFile::Open(infile.c_str(),"READ");
+
+    TFile *fin = TFile::Open(fname.c_str(),"READ");   
     if(fin->TestBit(TFile::kRecovered)){
-      cout<<Form("Skipping %s. Recovered file.",infile.c_str())<<endl;
+      cout<<"Skipped file: "<<fname<<". It is a recovered file"<<endl;
       fin->Close(); delete fin; return 0;
     }
     nfile++;
-   
+
     TTree *T = (TTree*)fin->Get("T");
     if(T==0) return 0;
 
@@ -103,7 +104,7 @@ void quick_radialNoCut_EG1(){
         if(sp==-1) continue;
         int dt = dtM[int(hit->at(j).det)]-1;
         if(dt==-1) continue;
-//        if(hit->at(j).k<1) continue;
+        if(hit->at(j).k<1) continue;
 
         h_rate[sp][dt]->Fill(hit->at(j).r,rate);
         if(hit->at(j).pz>=0)

@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-    TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/default-geo";
+    TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/PMTShielding";
     const string spTit[] = {"e-/#pi-","e+/#pi+","#gamma","neutron","e-/e+ E>1","primary e E>1"};
     const int nSp = sizeof(spTit)/sizeof(*spTit);
     const string spH[nSp] ={"epiM","epiP","g","n","ee1","pri1"};
@@ -12,27 +12,27 @@
     map<int,int> dtM {{28,1},{176,2}};
     const int nDet = sizeof(detH)/sizeof(*detH);
     int Det[nDet] = {28,176};
-    double rmin[nDet] = {920,600};
-    double rmax[nDet] = {1060,700};
+    double rmin[nDet] = {1200,294};
+    double rmax[nDet] = {1500,472};
     TH1D* eRate[nSp][nDet];
     void niceLogBins(TH1*);
     TFile* outfile;
     int beamGen(1);
-    const string tgt_gen_config = "Optics1_beam_magOFF_V5";
-void energy_distribution_dsScanner(){
+    const string tgt_gen_config = "PMTSh_beam_V3";
+void energy_distribution_sam_test(){
    gStyle->SetOptStat(0);
    for(int iSp=0;iSp<nSp;iSp++){
    for(int iDet=0;iDet<nDet;iDet++){
-      eRate[iSp][iDet] = new TH1D(Form("%s_E_%s",detH[iDet].c_str(),spH[iSp].c_str()),Form("Kinetic Energy on %s (%s), %.0f<=r<=%.0f;E (MeV);hits/%sthrownEvents",detH[iDet].c_str(),tgt_gen_config.c_str(),rmin[iDet],rmax[iDet],"#"),121,-8,5);
+      eRate[iSp][iDet] = new TH1D(Form("%s_E_%s",detH[iDet].c_str(),spH[iSp].c_str()),Form("Kinetic Energy on %s (%s), %.0fmm<=r<=%.0fmm;E (MeV);hits/%sthrownEvents",detH[iDet].c_str(),tgt_gen_config.c_str(),rmin[iDet],rmax[iDet],"#"),121,-8,5);
       eRate[iSp][iDet]->SetLineColor(color[iSp]);
       niceLogBins(eRate[iSp][iDet]);
    }
    }
-    outfile = new TFile(Form("./rootfiles/ds_scanner_KE_dist_%s.root",tgt_gen_config.c_str()),"recreate");
+    outfile = new TFile(Form("./rootfiles/sam_pmt_kinE_%s.root",tgt_gen_config.c_str()),"recreate");
     int nfile=0;
     Long64_t nentry=0;
     long nTotEv=0;
-    for(int ifile=1001;ifile<=6000;ifile++){
+    for(int ifile=1001;ifile<=1927;ifile++){
        string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
        ifstream inf(infile.c_str());
        if(!inf){
@@ -41,8 +41,8 @@ void energy_distribution_dsScanner(){
        }
        TFile *fin = TFile::Open(infile.c_str(),"READ");
        if(fin->TestBit(TFile::kRecovered)){
-       cout<<Form("Skipping %s. Recovered file.",infile.c_str())<<endl;
-       fin->Close(); delete fin; return 0;
+         cout<<Form("Skipping %s. Recovered file.",infile.c_str())<<endl;
+         fin->Close(); delete fin; return 0;
        }
        nfile++;
        

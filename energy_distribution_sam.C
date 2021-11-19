@@ -38,12 +38,14 @@ void energy_distribution_sam(){
     const string sim = "PMTSh_beam_V3";
     for(int ifile=1001;ifile<=2000;ifile++){
        string infile = Form("%s/%s/%s_%d.root",rootfile_dir.c_str(),sim.c_str(),sim.c_str(),ifile);
-       TFile *fin = new TFile(infile.c_str(),"READ");
-       if(!fin->IsOpen() || fin->IsZombie()){
-         cout<<"Problem: can't find file: "<<infile<<endl;
+       ifstream inf(infile.c_str());
+       if(!inf){
+         cout<<Form("Skipping %s. File doesn't exist.",infile.c_str())<<endl;
          continue;
-       }else if(fin->TestBit(TFile::kRecovered)){
-         cout<<"Problem: Recovered file: "<<infile<<endl;
+       }
+       TFile *fin = new TFile(infile.c_str(),"READ");
+       if(fin->TestBit(TFile::kRecovered)){
+         cout<<Form("Skipping %s. Recovered file.",infile.c_str())<<endl;
          continue;
        }
        nfile++;

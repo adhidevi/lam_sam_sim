@@ -65,12 +65,14 @@ void quick_radial_manyDet(){
 ///Change this line for appropriate rootfiles////
     string infile = Form("%s/Optics1_beam_magOFF_V4/Optics1_beam_magOFF_V4_%d.root",rootfile_dir.Data(),ifile);
 //////////////////////////////////////////////
+    ifstream inf(infile.c_str());
+    if(!inf){
+      cout<<Form("Skipping %s. File doesn't exist.",infile.c_str())<<endl;
+      continue;
+    }
     TFile *fin = TFile::Open(infile.c_str(),"READ");
-    if(!fin->IsOpen() || fin->IsZombie()){
-      cout<<"Problem: can't find file: "<<infile<<endl;
-      fin->Close(); delete fin; return 0;
-    }else if(fin->TestBit(TFile::kRecovered)){
-      cout<<"Problem: Recovered file: "<<infile<<endl;
+    if(fin->TestBit(TFile::kRecovered)){
+      cout<<Form("Skipping %s. Recovered file.",infile.c_str())<<endl;
       fin->Close(); delete fin; return 0;
     }
     nfile++;
@@ -137,9 +139,9 @@ void quick_radial_manyDet(){
       outfile->cd(Form("%s",detH[iDet].c_str()));
       for(int iSp=0;iSp<nSp;iSp++){
        if(beamGen){
-         h_rate[iSp][iDet]->Scale(1.0/nentry);
-         h_ratePzG0[iSp][iDet]->Scale(1.0/nentry);
-         h_ratePzL0[iSp][iDet]->Scale(1.0/nentry);
+         h_rate[iSp][iDet]->Scale(1.0/nTotEv);
+         h_ratePzG0[iSp][iDet]->Scale(1.0/nTotEv);
+         h_ratePzL0[iSp][iDet]->Scale(1.0/nTotEv);
        }else{
          h_rate[iSp][iDet]->Scale(1.0/nfile);
          h_ratePzG0[iSp][iDet]->Scale(1.0/nfile);
