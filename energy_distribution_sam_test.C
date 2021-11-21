@@ -32,7 +32,7 @@ void energy_distribution_sam_test(){
     int nfile=0;
     Long64_t nentry=0;
     long nTotEv=0;
-    for(int ifile=1001;ifile<=1927;ifile++){
+    for(int ifile=1001;ifile<=2000;ifile++){
        string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
        ifstream inf(infile.c_str());
        if(!inf){
