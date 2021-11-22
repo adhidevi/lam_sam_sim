@@ -1,4 +1,4 @@
-//This macro produces radial distribution for various virtual detectors
+//This macro produces radial and transverse distribution for various virtual detectors
 #include "remolltypes.hh"
 #include <sstream>
 #include <iostream>
@@ -11,8 +11,8 @@ void radial_trans_radialCut_EG1(){
   gStyle->SetPadGridY(1);
   TGaxis::SetMaxDigits(3);
   
-  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","primary (KE>1 MeV)"};
-//  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all KE","primary all E"};
+//  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","primary (KE>1 MeV)"};
+  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all KE","primary all E"};
   const int nSp = sizeof(spTit)/sizeof(*spTit);
   const string spH[nSp] = {"epiM","epiP","g","n","ee","pri"};
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
@@ -25,11 +25,12 @@ void radial_trans_radialCut_EG1(){
 ////////////////////////////////////////////////////////////////////////
 
   double x_min = 0;
-  double x_max = 1500;
-  const int nbin = 200;
+  double x_max = 1700;
+  const int nbin = 500;
   double bin_width = (x_max-x_min)/nbin;
-  const string weight[] = {"rate","rateE"};
+  const string weight[] = {"rate","rateE","rateA"};
   const int nWt = sizeof(weight)/sizeof(*weight);
+  const string weight_unit[nWt] ={"rate (GHz)","rate*E (GHz*MeV)","rate*A (GHz*ppm)"};
   TH1F* h_rate[nSp][nDet][nWt];
   TH1F* h_ratePzG0[nSp][nDet][nWt];
   TH1F* h_ratePzL0[nSp][nDet][nWt];
@@ -39,8 +40,8 @@ void radial_trans_radialCut_EG1(){
 
 ///Change the following lines as needed////
   const string geometry = "PMTSh";//defaultGeo or PMTSh
-  const string tgt_gen_config = "PMTSh_beam_V3";
-  const string plotType = "radial_trans_rNoCut_EG1";//EG1 or allE
+  const string tgt_gen_config = "PMTSh_beam_V4";
+  const string plotType = "radial_trans_rCut_allE";//rCut or rNoCut and EG1 or allE
   int beamGen(1);
 //////////////////////////////////////////
 
@@ -52,12 +53,15 @@ void radial_trans_radialCut_EG1(){
   for(int iSp=0;iSp<nSp;iSp++){
    for(int iDet=0;iDet<nDet;iDet++){
     for(int iWt=0;iWt<nWt;iWt++){
-      h_rate[iSp][iDet][iWt] = new TH1F(Form("%s_r_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),Form("%s Radial dist. on %s plane (%s);Radius (mm);hits/#thrownEvents/%.1fmm",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),bin_width),nbin,x_min,x_max);
-      h_ratePzG0[iSp][iDet][iWt] = new TH1F(Form("%s_rPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),Form("%s Radial dist. on %s plane pz>=0 (%s);Radius (mm);hits/#thrownEvents/%.1fmm",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),bin_width),nbin,x_min,x_max);
-      h_ratePzL0[iSp][iDet][iWt] = new TH1F(Form("%s_rPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),Form("%s Radial dist. on %s plane pz<0 (%s);Radius (mm);hits/#thrownEvents/%.1fmm",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),bin_width),nbin,x_min,x_max);
-      h_xy[iSp][iDet][iWt] = new TH2F(Form("%s_xy_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),Form("%s XY dist. on %s plane (%s);x (mm);y (mm)",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str()),500,-2000,2000,500,-2000,2000);
-      h_xyPzG0[iSp][iDet][iWt] = new TH2F(Form("%s_xyPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),Form("%s XY dist. on %s plane (%s);x (mm);y (mm)",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str()),500,-2000,2000,500,-2000,2000);
-      h_xyPzL0[iSp][iDet][iWt] = new TH2F(Form("%s_xyPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),Form("%s XY dist. on %s plane (%s);x (mm);y (mm)",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str()),500,-2000,2000,500,-2000,2000);
+      string title1D = Form("%s Radial dist. on %s plane (%s);Radius (mm);%s/%.1fmm",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),weight_unit[iWt].c_str(),bin_width);
+      h_rate[iSp][iDet][iWt] = new TH1F(Form("%s_r_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title1D.c_str(),nbin,x_min,x_max);
+      h_ratePzG0[iSp][iDet][iWt] = new TH1F(Form("%s_rPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title1D.c_str(),nbin,x_min,x_max);
+      h_ratePzL0[iSp][iDet][iWt] = new TH1F(Form("%s_rPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title1D.c_str(),nbin,x_min,x_max);
+
+      string title2D = Form("%s XY dist. on %s plane (%s);x (mm);y (mm)",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str());
+      h_xy[iSp][iDet][iWt] = new TH2F(Form("%s_xy_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title2D.c_str(),500,-2000,2000,500,-2000,2000);
+      h_xyPzG0[iSp][iDet][iWt] = new TH2F(Form("%s_xyPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title2D.c_str(),500,-2000,2000,500,-2000,2000);
+      h_xyPzL0[iSp][iDet][iWt] = new TH2F(Form("%s_xyPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title2D.c_str(),500,-2000,2000,500,-2000,2000);
 
       h_rate[iSp][iDet][iWt]->Sumw2();
       h_ratePzG0[iSp][iDet][iWt]->Sumw2();
@@ -81,7 +85,7 @@ void radial_trans_radialCut_EG1(){
     TFile *fin = TFile::Open(infile.c_str(),"READ");
     if(fin->TestBit(TFile::kRecovered)){
       cout<<Form("Skipping %s. Recovered file.",infile.c_str())<<endl;
-      fin->Close(); delete fin; return 0;
+      continue;
     }
     nfile++;
    
@@ -114,59 +118,78 @@ void radial_trans_radialCut_EG1(){
         int dt = dtM[int(hit->at(j).det)]-1;
         if(dt==-1) continue;
 //comment following line if want to plot all r
-//        if(hit->at(j).r<100) continue;
+        if(hit->at(j).r<100) continue;
 //comment following line if want to plot all E
-        if(hit->at(j).k<1) continue;
+//        if(hit->at(j).k<1) continue;
 
         h_rate[sp][dt][0]->Fill(hit->at(j).r,rate);
         h_rate[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+        h_rate[sp][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
         h_xy[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
         h_xy[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+        h_xy[sp][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
+
         if(hit->at(j).pz>=0){
           h_ratePzG0[sp][dt][0]->Fill(hit->at(j).r,rate);
           h_ratePzG0[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+          h_ratePzG0[sp][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
           h_xyPzG0[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
           h_xyPzG0[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+          h_xyPzG0[sp][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
         }else{
           h_ratePzL0[sp][dt][0]->Fill(hit->at(j).r,rate);
           h_ratePzL0[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+          h_ratePzL0[sp][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
           h_xyPzL0[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
           h_xyPzL0[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+          h_xyPzL0[sp][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
         }
 
         if(hit->at(j).pid==11 || hit->at(j).pid==-11){
           h_rate[4][dt][0]->Fill(hit->at(j).r,rate);
           h_rate[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+          h_rate[4][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
           h_xy[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
           h_xy[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+          h_xy[4][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           if(hit->at(j).pz>=0){
             h_ratePzG0[4][dt][0]->Fill(hit->at(j).r,rate);
             h_ratePzG0[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+            h_ratePzG0[4][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
             h_xyPzG0[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
             h_xyPzG0[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+            h_xyPzG0[4][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           }else{
             h_ratePzL0[4][dt][0]->Fill(hit->at(j).r,rate);
             h_ratePzL0[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+            h_ratePzL0[4][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
             h_xyPzL0[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
             h_xyPzL0[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+            h_xyPzL0[4][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           }
         }
 
         if(hit->at(j).k>1 && hit->at(j).trid==1){
           h_rate[5][dt][0]->Fill(hit->at(j).r,rate);
           h_rate[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+          h_rate[5][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
           h_xy[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
           h_xy[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+          h_xy[5][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           if(hit->at(j).pz>=0){
             h_ratePzG0[5][dt][0]->Fill(hit->at(j).r,rate);
             h_ratePzG0[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+            h_ratePzG0[5][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
             h_xyPzG0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
             h_xyPzG0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+            h_xyPzG0[5][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           }else{
             h_ratePzL0[5][dt][0]->Fill(hit->at(j).r,rate);
             h_ratePzL0[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+            h_ratePzL0[5][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
             h_xyPzG0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
             h_xyPzG0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+            h_xyPzG0[5][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           }
         }
 
@@ -191,12 +214,12 @@ void radial_trans_radialCut_EG1(){
          h_xyPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_xyPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
        }else{
-         h_rate[iSp][iDet][iWt]->Scale(1.0/nfile);
-         h_ratePzG0[iSp][iDet][iWt]->Scale(1.0/nfile);
-         h_ratePzL0[iSp][iDet][iWt]->Scale(1.0/nfile);
-         h_xy[iSp][iDet][iWt]->Scale(1.0/nfile);
-         h_xyPzG0[iSp][iDet][iWt]->Scale(1.0/nfile);
-         h_xyPzL0[iSp][iDet][iWt]->Scale(1.0/nfile);
+         h_rate[iSp][iDet][iWt]->Scale(1.0e-9/nfile);//convert to GHz with 1.0e-9
+         h_ratePzG0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_ratePzL0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_xy[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_xyPzG0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_xyPzL0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
        }
          h_rate[iSp][iDet][iWt]->Write();
          h_ratePzG0[iSp][iDet][iWt]->Write();
