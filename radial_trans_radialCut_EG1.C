@@ -25,7 +25,7 @@ void radial_trans_radialCut_EG1(){
 ////////////////////////////////////////////////////////////////////////
 
   double x_min = 0;
-  double x_max = 1700;
+  double x_max = 700;
   const int nbin = 500;
   double bin_width = (x_max-x_min)/nbin;
   const string weight[] = {"rate","rateE","rateA"};
@@ -41,7 +41,7 @@ void radial_trans_radialCut_EG1(){
 ///Change the following lines as needed////
   const string geometry = "PMTSh";//defaultGeo or PMTSh
   const string tgt_gen_config = "PMTSh_beam_V4";
-  const string plotType = "radial_trans_rCut_allE";//rCut or rNoCut and EG1 or allE
+  const string plotType = "sam_pmt_radial_trans_rNoCut_allE";//rCut or rNoCut and EG1 or allE
   int beamGen(1);
 //////////////////////////////////////////
 
@@ -59,9 +59,9 @@ void radial_trans_radialCut_EG1(){
       h_ratePzL0[iSp][iDet][iWt] = new TH1F(Form("%s_rPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title1D.c_str(),nbin,x_min,x_max);
 
       string title2D = Form("%s XY dist. on %s plane (%s);x (mm);y (mm)",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str());
-      h_xy[iSp][iDet][iWt] = new TH2F(Form("%s_xy_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title2D.c_str(),500,-2000,2000,500,-2000,2000);
-      h_xyPzG0[iSp][iDet][iWt] = new TH2F(Form("%s_xyPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title2D.c_str(),500,-2000,2000,500,-2000,2000);
-      h_xyPzL0[iSp][iDet][iWt] = new TH2F(Form("%s_xyPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title2D.c_str(),500,-2000,2000,500,-2000,2000);
+      h_xy[iSp][iDet][iWt] = new TH2F(Form("%s_xy_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title2D.c_str(),nbin,-x_max,x_max,nbin,-x_max,x_max);
+      h_xyPzG0[iSp][iDet][iWt] = new TH2F(Form("%s_xyPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title2D.c_str(),nbin,-x_max,x_max,nbin,-x_max,x_max);
+      h_xyPzL0[iSp][iDet][iWt] = new TH2F(Form("%s_xyPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title2D.c_str(),nbin,-x_max,x_max,nbin,-x_max,x_max);
 
       h_rate[iSp][iDet][iWt]->Sumw2();
       h_ratePzG0[iSp][iDet][iWt]->Sumw2();
@@ -118,7 +118,7 @@ void radial_trans_radialCut_EG1(){
         int dt = dtM[int(hit->at(j).det)]-1;
         if(dt==-1) continue;
 //comment following line if want to plot all r
-        if(hit->at(j).r<100) continue;
+//        if(hit->at(j).r<100) continue;
 //comment following line if want to plot all E
 //        if(hit->at(j).k<1) continue;
 
