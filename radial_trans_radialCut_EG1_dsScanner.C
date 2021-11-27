@@ -3,7 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-void radial_trans_radialCut_EG1(){
+void radial_trans_radialCut_EG1_dsScanner(){
   gROOT->Reset();
   gStyle->SetOptStat(0);
   gStyle->SetTitleYOffset(1.3);
@@ -18,14 +18,14 @@ void radial_trans_radialCut_EG1(){
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 
 ///Change the following lines for which detectors you want to include////
-  string detH[] = {"det174","det175","det28","det30","det177","det31","det86","det87","det88","det89"};
+  string detH[] = {"det174","det175","det28","det30","det176","det31"};
   const int nDet = sizeof(detH)/sizeof(*detH);
-  const int Det[nDet] = {174,175,28,30,177,31,86,87,88,89};
-  map<int,int> dtM {{174,1},{175,2},{28,3},{30,4},{177,5},{31,6},{86,7},{87,8},{88,9},{89,10}};
+  const int Det[nDet] = {174,175,28,30,176,31};
+  map<int,int> dtM {{174,1},{175,2},{28,3},{30,4},{176,5},{31,6}};
 ////////////////////////////////////////////////////////////////////////
 
   double x_min = 0;
-  double x_max = 100;
+  double x_max = 1000;
   const int nbin = 500;
   double bin_width = (x_max-x_min)/nbin;
   const string weight[] = {"rate","rateE","rateA"};
@@ -40,8 +40,8 @@ void radial_trans_radialCut_EG1(){
 
 ///Change the following lines as needed////
   const string geometry = "PMTSh";//defaultGeo or PMTSh
-  const string tgt_gen_config = "PMTSh_beam_V5";
-  const string plotType = "radial_trans_rNoCut_allE";//rCut or rNoCut and EG1 or allE
+  const string tgt_gen_config = "PMTSh_beam_V4";
+  const string plotType = "dsScanner_radial_trans_rNoCut_allE";//rCut or rNoCut and EG1 or allE
   int beamGen(1);
 //////////////////////////////////////////
 
@@ -101,6 +101,8 @@ void radial_trans_radialCut_EG1(){
     remollBeamTarget_t *bm = 0;
     remollEvent_t *ev = 0;
     Double_t rate = 0;
+    Double_t phi = 0;
+    Double_t modphi = 0;
     T->SetBranchAddress("hit", & hit);
     T->SetBranchAddress("part", & part);
     T->SetBranchAddress("bm", & bm);
@@ -117,6 +119,10 @@ void radial_trans_radialCut_EG1(){
         if(sp==-1) continue;
         int dt = dtM[int(hit->at(j).det)]-1;
         if(dt==-1) continue;
+        phi = hit->at(j).ph;
+        if(phi<0) phi +=2.0*TMath::Pi();
+        modphi = fmod(phi,2.0*TMath::Pi()/7.0);
+        if(modphi<3.0*TMath::Pi()/28.0 ||modphi>5.0*TMath::Pi()/28.0) continue;
 //comment following line if want to plot all r
 //        if(hit->at(j).r<100) continue;
 //comment following line if want to plot all E
