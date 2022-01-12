@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-    TString rootfile_dir = "/volatile/halla/moller12gev/devi/remoll_rootfiles/default-geo";
+    TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/default-geo";
     const string spTit[] = {"e-/#pi-","e+/#pi+","#gamma","neutron","e-/e+ E>1","primary E>1"};
     const int nSp = sizeof(spTit)/sizeof(*spTit);
     const string spH[nSp] ={"epiM","epiP","g","n","ee1","pri1"};
@@ -12,14 +12,14 @@
     map<int,int> dtM {{28,1},{176,2}};
     const int nDet = sizeof(detH)/sizeof(*detH);
     int Det[nDet] = {28,176};
-    double rmin[nDet] = {920,500};
-    double rmax[nDet] = {1060,700};
+    double rmin[nDet] = {200,200};
+    double rmax[nDet] = {600,600};
     TH1D* eRate[nSp][nDet];
     void niceLogBins(TH1*);
     TFile* outfile;
     int beamGen(1);
-    const string tgt_gen_config = "Optics1_beam_magOFF_V6";
-void energy_distribution_dsScanner(){
+    const string tgt_gen_config = "LH2_beam";
+void energy_distribution_smallR(){
    gStyle->SetOptStat(0);
    for(int iSp=0;iSp<nSp;iSp++){
    for(int iDet=0;iDet<nDet;iDet++){
@@ -28,11 +28,11 @@ void energy_distribution_dsScanner(){
       niceLogBins(eRate[iSp][iDet]);
    }
    }
-    outfile = new TFile(Form("./rootfiles/openSector_dsScanner_kinE_dist_%s.root",tgt_gen_config.c_str()),"recreate");
+    outfile = new TFile(Form("./rootfiles/ring5_200to600mm_kinE_dist_%s.root",tgt_gen_config.c_str()),"recreate");
     int nfile=0;
     Long64_t nentry=0;
     long nTotEv=0;
-    for(int ifile=1001;ifile<=6000;ifile++){
+    for(int ifile=1001;ifile<=1927;ifile++){
        string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
        ifstream inf(infile.c_str());
        if(!inf){
@@ -79,7 +79,7 @@ void energy_distribution_dsScanner(){
            phi = hit->at(j).ph;
            if(phi<0) phi +=2.0*TMath::Pi();
            modphi = fmod(phi,2.0*TMath::Pi()/7.0);
-           if(modphi<3.0*TMath::Pi()/28.0 || modphi>5.0*TMath::Pi()/28.0) continue;
+//           if(modphi<3.0*TMath::Pi()/28.0 || modphi>5.0*TMath::Pi()/28.0) continue;
 
            if(hit->at(j).r>=rmin[dt] && hit->at(j).r<=rmax[dt]){
              eRate[sp][dt]->Fill(hit->at(j).k,rate);

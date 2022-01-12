@@ -18,19 +18,19 @@ void radial_trans_radialCut_EG1_dsScanner(){
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 
 ///Change the following lines for which detectors you want to include////
-  string detH[] = {"det174","det175","det28","det30","det176","det31"};
+  string detH[] = {"det174","det28","det30","det176"};
   const int nDet = sizeof(detH)/sizeof(*detH);
-  const int Det[nDet] = {174,175,28,30,176,31};
-  map<int,int> dtM {{174,1},{175,2},{28,3},{30,4},{176,5},{31,6}};
+  const int Det[nDet] = {174,28,30,176};
+  map<int,int> dtM {{174,1},{28,2},{30,3},{176,4}};
 ////////////////////////////////////////////////////////////////////////
 
   double x_min = 0;
-  double x_max = 1000;
-  const int nbin = 500;
+  double x_max = 1500;
+  const int nbin = 200;
   double bin_width = (x_max-x_min)/nbin;
-  const string weight[] = {"rate","rateE","rateA"};
+  const string weight[] = {"rate","rateE"};
   const int nWt = sizeof(weight)/sizeof(*weight);
-  const string weight_unit[nWt] ={"rate (GHz)","rate*E (GHz*MeV)","rate*A (GHz*ppm)"};
+  const string weight_unit[nWt] ={"hits/#thrownEvents","E*hits/#thrownEvents"};
   TH1F* h_rate[nSp][nDet][nWt];
   TH1F* h_ratePzG0[nSp][nDet][nWt];
   TH1F* h_ratePzL0[nSp][nDet][nWt];
@@ -39,15 +39,15 @@ void radial_trans_radialCut_EG1_dsScanner(){
   TH2F* h_xyPzL0[nSp][nDet][nWt];
 
 ///Change the following lines as needed////
-  const string geometry = "PMTSh";//defaultGeo or PMTSh
-  const string tgt_gen_config = "PMTSh_beam_V4";
-  const string plotType = "dsScanner_radial_trans_rNoCut_allE";//rCut or rNoCut and EG1 or allE
+  const string geometry = "defaultGeo";//defaultGeo or PMTSh
+  const string tgt_gen_config = "LH2_beam_magON_V5";
+  const string plotType = "radial_trans_rNoCut_allE";//rCut or rNoCut and EG1 or allE
   int beamGen(1);
 //////////////////////////////////////////
 
   TFile* outfile = new TFile(Form("./rootfiles/%s_%s_%s.root",geometry.c_str(),tgt_gen_config.c_str(),plotType.c_str()),"recreate");
 ///Change this line for appropriate rootfile directory////
-  TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/PMTShielding";
+  TString rootfile_dir = "/volatile/halla/moller12gev/devi/remoll_rootfiles/default-geo";
 //////////////////////////////////////////////////////////
 
   for(int iSp=0;iSp<nSp;iSp++){
@@ -73,7 +73,7 @@ void radial_trans_radialCut_EG1_dsScanner(){
   int nfile=0;
   Long64_t nentry=0;
   long nTotEv=0;
-  for(int ifile=1001;ifile<=2000;ifile++){
+  for(int ifile=1001;ifile<=6000;ifile++){
 ///Change this line for appropriate rootfiles////
     string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
 //////////////////////////////////////////////
@@ -122,80 +122,64 @@ void radial_trans_radialCut_EG1_dsScanner(){
         phi = hit->at(j).ph;
         if(phi<0) phi +=2.0*TMath::Pi();
         modphi = fmod(phi,2.0*TMath::Pi()/7.0);
-        if(modphi<3.0*TMath::Pi()/28.0 ||modphi>5.0*TMath::Pi()/28.0) continue;
+//comment following line if want to plot full azimuth
+//        if(modphi<3.0*TMath::Pi()/28.0 ||modphi>5.0*TMath::Pi()/28.0) continue;
+
 //comment following line if want to plot all r
-//        if(hit->at(j).r<100) continue;
+        if(hit->at(j).r>1500) continue;
 //comment following line if want to plot all E
 //        if(hit->at(j).k<1) continue;
 
         h_rate[sp][dt][0]->Fill(hit->at(j).r,rate);
         h_rate[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-        h_rate[sp][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
         h_xy[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
         h_xy[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-        h_xy[sp][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
 
         if(hit->at(j).pz>=0){
           h_ratePzG0[sp][dt][0]->Fill(hit->at(j).r,rate);
           h_ratePzG0[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-          h_ratePzG0[sp][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
           h_xyPzG0[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
           h_xyPzG0[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          h_xyPzG0[sp][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
         }else{
           h_ratePzL0[sp][dt][0]->Fill(hit->at(j).r,rate);
           h_ratePzL0[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-          h_ratePzL0[sp][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
           h_xyPzL0[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
           h_xyPzL0[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          h_xyPzL0[sp][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
         }
 
         if(hit->at(j).pid==11 || hit->at(j).pid==-11){
           h_rate[4][dt][0]->Fill(hit->at(j).r,rate);
           h_rate[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-          h_rate[4][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
           h_xy[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
           h_xy[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          h_xy[4][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           if(hit->at(j).pz>=0){
             h_ratePzG0[4][dt][0]->Fill(hit->at(j).r,rate);
             h_ratePzG0[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-            h_ratePzG0[4][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
             h_xyPzG0[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
             h_xyPzG0[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-            h_xyPzG0[4][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           }else{
             h_ratePzL0[4][dt][0]->Fill(hit->at(j).r,rate);
             h_ratePzL0[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-            h_ratePzL0[4][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
             h_xyPzL0[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
             h_xyPzL0[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-            h_xyPzL0[4][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           }
         }
 
-        if(hit->at(j).k>1 && hit->at(j).trid==1){
+        if(hit->at(j).trid==1){
           h_rate[5][dt][0]->Fill(hit->at(j).r,rate);
           h_rate[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-          h_rate[5][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
           h_xy[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
           h_xy[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          h_xy[5][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           if(hit->at(j).pz>=0){
             h_ratePzG0[5][dt][0]->Fill(hit->at(j).r,rate);
             h_ratePzG0[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-            h_ratePzG0[5][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
             h_xyPzG0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
             h_xyPzG0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-            h_xyPzG0[5][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           }else{
             h_ratePzL0[5][dt][0]->Fill(hit->at(j).r,rate);
             h_ratePzL0[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-            h_ratePzL0[5][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
             h_xyPzG0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
             h_xyPzG0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-            h_xyPzG0[5][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           }
         }
 
@@ -212,21 +196,12 @@ void radial_trans_radialCut_EG1_dsScanner(){
     outfile->cd(Form("%s",detH[iDet].c_str()));
     for(int iSp=0;iSp<nSp;iSp++){
       for(int iWt=0;iWt<nWt;iWt++){
-       if(beamGen){
          h_rate[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_ratePzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_ratePzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_xy[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_xyPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_xyPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
-       }else{
-         h_rate[iSp][iDet][iWt]->Scale(1.0e-9/nfile);//convert to GHz with 1.0e-9
-         h_ratePzG0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
-         h_ratePzL0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
-         h_xy[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
-         h_xyPzG0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
-         h_xyPzL0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
-       }
          h_rate[iSp][iDet][iWt]->Write();
          h_ratePzG0[iSp][iDet][iWt]->Write();
          h_ratePzL0[iSp][iDet][iWt]->Write();
