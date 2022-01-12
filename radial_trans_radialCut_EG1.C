@@ -18,19 +18,22 @@ void radial_trans_radialCut_EG1(){
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 
 ///Change the following lines for which detectors you want to include////
-  string detH[] = {"det174","det175","det28","det30","det177","det31","det86","det87","det88","det89"};
+  string detH[] = {"det174","det175","det28","det176","det27"};
   const int nDet = sizeof(detH)/sizeof(*detH);
-  const int Det[nDet] = {174,175,28,30,177,31,86,87,88,89};
-  map<int,int> dtM {{174,1},{175,2},{28,3},{30,4},{177,5},{31,6},{86,7},{87,8},{88,9},{89,10}};
+  const int Det[nDet] = {174,175,28,176,27};
+  map<int,int> dtM {{174,1},{175,2},{28,3},{176,4},{27,5}};
 ////////////////////////////////////////////////////////////////////////
 
   double x_min = 0;
-  double x_max = 100;
+  double x_max = 1900;
   const int nbin = 500;
   double bin_width = (x_max-x_min)/nbin;
   const string weight[] = {"rate","rateE","rateA"};
   const int nWt = sizeof(weight)/sizeof(*weight);
-  const string weight_unit[nWt] ={"rate (GHz)","rate*E (GHz*MeV)","rate*A (GHz*ppm)"};
+// if physics generators use the following
+//  const string weight_unit[nWt] ={"rate (GHz)","rate*E (GHz*MeV)","rate*A (GHz*ppm)"};
+// if beam generator use the following
+  const string weight_unit[nWt] ={"hits/#thrownEvents","E*hits/#thrownEvents","A*hits/#thrownEvents"};
   TH1F* h_rate[nSp][nDet][nWt];
   TH1F* h_ratePzG0[nSp][nDet][nWt];
   TH1F* h_ratePzL0[nSp][nDet][nWt];
@@ -40,7 +43,7 @@ void radial_trans_radialCut_EG1(){
 
 ///Change the following lines as needed////
   const string geometry = "PMTSh";//defaultGeo or PMTSh
-  const string tgt_gen_config = "PMTSh_beam_V5";
+  const string tgt_gen_config = "PMTSh_beam_V10";
   const string plotType = "radial_trans_rNoCut_allE";//rCut or rNoCut and EG1 or allE
   int beamGen(1);
 //////////////////////////////////////////
@@ -73,7 +76,7 @@ void radial_trans_radialCut_EG1(){
   int nfile=0;
   Long64_t nentry=0;
   long nTotEv=0;
-  for(int ifile=1001;ifile<=2000;ifile++){
+  for(int ifile=1001;ifile<=6000;ifile++){
 ///Change this line for appropriate rootfiles////
     string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
 //////////////////////////////////////////////
@@ -118,7 +121,7 @@ void radial_trans_radialCut_EG1(){
         int dt = dtM[int(hit->at(j).det)]-1;
         if(dt==-1) continue;
 //comment following line if want to plot all r
-//        if(hit->at(j).r<100) continue;
+//        if(hit->at(j).r>700) continue;
 //comment following line if want to plot all E
 //        if(hit->at(j).k<1) continue;
 

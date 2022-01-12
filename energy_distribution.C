@@ -8,12 +8,12 @@
     const string spH[nSp] ={"epiM","epiP","g","n","ee1","pri1"};
     map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
     int color[nSp] = {2,3,1,4,6,7};
-    const string detH[] = {"det28","det176"};
-    map<int,int> dtM {{28,1},{176,2}};
+    const string detH[] = {"det28","det27"};
+    map<int,int> dtM {{28,1},{27,2}};
     const int nDet = sizeof(detH)/sizeof(*detH);
-    int Det[nDet] = {28,176};
-    double rmin[nDet] = {1200,290};
-    double rmax[nDet] = {1500,480};
+    int Det[nDet] = {28,27};
+    double rmin[nDet] = {1371.95,1371.95};
+    double rmax[nDet] = {1651,1651};
     TH1D* eRate[nSp][nDet];
     void niceLogBins(TH1*);
     TFile* outfile; 
@@ -26,12 +26,12 @@ void energy_distribution(){
       niceLogBins(eRate[iSp][iDet]);
    }
    }
-    outfile = new TFile("./rootfiles/energy_dist.root","recreate");
+    outfile = new TFile("./rootfiles/energy_dist_PMTSh_beam_V10.root","recreate");
     TChain* T = new TChain("T");
     int nfile = 0;
-    for(int ifile=1001;ifile<=2000;ifile++){
+    for(int ifile=1001;ifile<=6000;ifile++){
        nfile++;
-       T->Add(Form("%sPMTSh_beam/PMTSh_beam_%d.root",rootfile_dir.Data(),ifile));
+       T->Add(Form("%sPMTSh_beam_V10/PMTSh_beam_V10_%d.root",rootfile_dir.Data(),ifile));
     }
     cout<<Form("Found %d files!!!",nfile)<<endl;
     Long64_t nentry = T->GetEntries();

@@ -1,9 +1,9 @@
-//This macro produces radial and transverse distribution for various virtual detectors
+//This macro produces various distributions for various SAM PMT and cathode detectors
 #include "remolltypes.hh"
 #include <sstream>
 #include <iostream>
 #include <fstream>
-void radial_trans_radialCut_EG1_dsScanner(){
+void beam_SAMcathodePMT(){
   gROOT->Reset();
   gStyle->SetOptStat(0);
   gStyle->SetTitleYOffset(1.3);
@@ -18,22 +18,19 @@ void radial_trans_radialCut_EG1_dsScanner(){
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 
 ///Change the following lines for which detectors you want to include////
-  string detH[] = {"det28","det177"};
+  string detH[] = {"det186","det187","det188","det189","det286","det287","det288","det289","det386","det387","det388","det389","det486","det487","det488","det489","det586","det587","det588","det589","det686","det687","det688","det689","det786","det787","det788","det789","det886","det887","det888","det889"};
   const int nDet = sizeof(detH)/sizeof(*detH);
-  const int Det[nDet] = {28,177};
-  map<int,int> dtM {{28,1},{177,2}};
+  const int Det[nDet] = {186,187,188,189,286,287,288,289,386,387,388,389,486,487,488,489,586,587,588,589,686,687,688,689,786,787,788,789,886,887,888,889};
+  map<int,int> dtM {{186,1},{187,2},{188,3},{189,4},{286,5},{287,6},{288,7},{289,8},{386,9},{387,10},{388,11},{389,12},{486,13},{487,14},{488,15},{489,16},{586,17},{587,18},{588,19},{589,20},{686,21},{687,22},{688,23},{689,24},{786,25},{787,26},{788,27},{789,28},{886,29},{887,30},{888,31},{889,32}};
 ////////////////////////////////////////////////////////////////////////
 
   double x_min = 0;
-  double x_max = 1000;
-  const int nbin = 200;
+  double x_max = 700;
+  const int nbin = 500;
   double bin_width = (x_max-x_min)/nbin;
-  const string weight[] = {"rate","rateE","rateA"};
+  const string weight[] = {"rate","rateE"};
   const int nWt = sizeof(weight)/sizeof(*weight);
-//  if physics generators
-//  const string weight_unit[nWt] ={"rate (GHz)","rate*E (GHz*MeV)","rate*A (GHz*ppb)"};
-//if beam generator
-  const string weight_unit[nWt] ={"hits/#thrownEvents","E*hits/#thrownEvents","A*hits/#thrownEvents"};
+  const string weight_unit[nWt] ={"hits/#thrownEvents","hits/#thrownEvents*E (MeV)"};
   TH1F* h_rate[nSp][nDet][nWt];
   TH1F* h_ratePzG0[nSp][nDet][nWt];
   TH1F* h_ratePzL0[nSp][nDet][nWt];
@@ -43,8 +40,8 @@ void radial_trans_radialCut_EG1_dsScanner(){
 
 ///Change the following lines as needed////
   const string geometry = "PMTSh";//defaultGeo or PMTSh
-  const string tgt_gen_config = "PMTSh_beam_V6";
-  const string plotType = "openSectors_radial_trans_rNoCut_allE";//rCut or rNoCut and EG1 or allE
+  const string tgt_gen_config = "PMTSh_beam_V9";
+  const string plotType = "SAMcathodePMT_allE";//EG1 or allE
   int beamGen(1);
 //////////////////////////////////////////
 
@@ -104,8 +101,6 @@ void radial_trans_radialCut_EG1_dsScanner(){
     remollBeamTarget_t *bm = 0;
     remollEvent_t *ev = 0;
     Double_t rate = 0;
-    Double_t phi = 0;
-    Double_t modphi = 0;
     T->SetBranchAddress("hit", & hit);
     T->SetBranchAddress("part", & part);
     T->SetBranchAddress("bm", & bm);
@@ -122,83 +117,61 @@ void radial_trans_radialCut_EG1_dsScanner(){
         if(sp==-1) continue;
         int dt = dtM[int(hit->at(j).det)]-1;
         if(dt==-1) continue;
-        phi = hit->at(j).ph;
-        if(phi<0) phi +=2.0*TMath::Pi();
-        modphi = fmod(phi,2.0*TMath::Pi()/7.0);
-        if(modphi<3.0*TMath::Pi()/28.0 ||modphi>5.0*TMath::Pi()/28.0) continue;
-//comment following line if want to plot all r
-        if(hit->at(j).r>1000) continue;
+//comment following line if want to plot with no radial cut
+        if(hit->at(j).r>700) continue;
 //comment following line if want to plot all E
 //        if(hit->at(j).k<1) continue;
 
         h_rate[sp][dt][0]->Fill(hit->at(j).r,rate);
         h_rate[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-        h_rate[sp][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
         h_xy[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
         h_xy[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-        h_xy[sp][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
 
         if(hit->at(j).pz>=0){
           h_ratePzG0[sp][dt][0]->Fill(hit->at(j).r,rate);
           h_ratePzG0[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-          h_ratePzG0[sp][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
           h_xyPzG0[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
           h_xyPzG0[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          h_xyPzG0[sp][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
         }else{
           h_ratePzL0[sp][dt][0]->Fill(hit->at(j).r,rate);
           h_ratePzL0[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-          h_ratePzL0[sp][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
           h_xyPzL0[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
           h_xyPzL0[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          h_xyPzL0[sp][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
         }
 
         if(hit->at(j).pid==11 || hit->at(j).pid==-11){
           h_rate[4][dt][0]->Fill(hit->at(j).r,rate);
           h_rate[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-          h_rate[4][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
           h_xy[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
           h_xy[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          h_xy[4][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           if(hit->at(j).pz>=0){
             h_ratePzG0[4][dt][0]->Fill(hit->at(j).r,rate);
             h_ratePzG0[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-            h_ratePzG0[4][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
             h_xyPzG0[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
             h_xyPzG0[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-            h_xyPzG0[4][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           }else{
             h_ratePzL0[4][dt][0]->Fill(hit->at(j).r,rate);
             h_ratePzL0[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-            h_ratePzL0[4][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
             h_xyPzL0[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
             h_xyPzL0[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-            h_xyPzL0[4][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           }
         }
 
         if(hit->at(j).k>1 && hit->at(j).trid==1){
           h_rate[5][dt][0]->Fill(hit->at(j).r,rate);
           h_rate[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-          h_rate[5][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
           h_xy[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
           h_xy[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          h_xy[5][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           if(hit->at(j).pz>=0){
             h_ratePzG0[5][dt][0]->Fill(hit->at(j).r,rate);
             h_ratePzG0[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-            h_ratePzG0[5][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
             h_xyPzG0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
             h_xyPzG0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-            h_xyPzG0[5][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           }else{
             h_ratePzL0[5][dt][0]->Fill(hit->at(j).r,rate);
             h_ratePzL0[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-            h_ratePzL0[5][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
             h_xyPzG0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
             h_xyPzG0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-            h_xyPzG0[5][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate*(-1*ev->A));
           }
         }
 
@@ -215,21 +188,12 @@ void radial_trans_radialCut_EG1_dsScanner(){
     outfile->cd(Form("%s",detH[iDet].c_str()));
     for(int iSp=0;iSp<nSp;iSp++){
       for(int iWt=0;iWt<nWt;iWt++){
-       if(beamGen){
          h_rate[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_ratePzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_ratePzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_xy[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_xyPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_xyPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
-       }else{
-         h_rate[iSp][iDet][iWt]->Scale(1.0e-9/nfile);//convert to GHz with 1.0e-9
-         h_ratePzG0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
-         h_ratePzL0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
-         h_xy[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
-         h_xyPzG0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
-         h_xyPzL0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
-       }
          h_rate[iSp][iDet][iWt]->Write();
          h_ratePzG0[iSp][iDet][iWt]->Write();
          h_ratePzL0[iSp][iDet][iWt]->Write();
