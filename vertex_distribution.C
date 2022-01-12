@@ -37,8 +37,13 @@ void vertex_distribution(){
   TH2F* h_VxVzPzL0[nSp][nDet][nWt];
 
 ///Change the following lines as needed////
+<<<<<<< HEAD
   const string geometry = "PMTSh";//defaultGeo or PMTSh
   const string tgt_gen_config = "PMTSh_beam_V6";
+=======
+  const string geometry = "defaultGeo";//defaultGeo or PMTSh
+  const string tgt_gen_config = "LH2_beam";
+>>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
   const string plotType = "vertex_distribution_allE";
   int beamGen(1);
 
@@ -46,7 +51,11 @@ void vertex_distribution(){
 
   TFile* outfile = new TFile(Form("./rootfiles/%s_%s_%s.root",geometry.c_str(),tgt_gen_config.c_str(),plotType.c_str()),"recreate");
 ///Change this line for appropriate rootfile directory////
+<<<<<<< HEAD
   TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/PMTShielding";
+=======
+  TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/default-geo";
+>>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
 //////////////////////////////////////////////////////////
 
   for(int iSp=0;iSp<nSp;iSp++){
@@ -63,7 +72,11 @@ void vertex_distribution(){
   int nfile=0;
   Long64_t nentry=0;
   long nTotEv=0;
+<<<<<<< HEAD
   for(int ifile=1001;ifile<=2000;ifile++){
+=======
+  for(int ifile=1001;ifile<=1927;ifile++){
+>>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
 ///Change this line for appropriate rootfiles////
     string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
 //////////////////////////////////////////////

@@ -28,7 +28,7 @@ void energy_distribution_dsScanner(){
       niceLogBins(eRate[iSp][iDet]);
    }
    }
-    outfile = new TFile(Form("./rootfiles/ds_scanner_kinE_dist_%s.root",tgt_gen_config.c_str()),"recreate");
+    outfile = new TFile(Form("./rootfiles/openSector_dsScanner_kinE_dist_%s.root",tgt_gen_config.c_str()),"recreate");
     int nfile=0;
     Long64_t nentry=0;
     long nTotEv=0;
@@ -98,36 +98,13 @@ void energy_distribution_dsScanner(){
     cout<<Form("Total number of file splits: %d",nfile)<<endl;
     cout<<Form("Total number of entries: %ld",nTotEv)<<endl;
 
-    TCanvas* c_E[nDet];
-    TLatex latex;
-    latex.SetNDC(1);
-    latex.SetTextSize(0.04);
     outfile->cd();
     for(int iDet=0;iDet<nDet;iDet++){
-       c_E[iDet] = new TCanvas(Form("c_E_%d",iDet));
-       gPad->SetLogx();
-       gPad->SetLogy();
        for(int iSp=0;iSp<nSp;iSp++){
           eRate[iSp][iDet]->Scale(1./nTotEv);
-          eRate[iSp][iDet]->GetYaxis()->SetRangeUser(1.0e-9,1.0e-2);
-          eRate[iSp][iDet]->SetMarkerStyle(20);
-          eRate[iSp][iDet]->SetMarkerSize(0.5);
-          eRate[iSp][iDet]->Draw("hist same");
           eRate[iSp][iDet]->Write();
-          latex.SetTextColor(color[iSp]);
-          if(iSp<3)
-            latex.DrawLatex(0.33,0.85-0.05*iSp,Form("%s: %.2e",spTit[iSp].c_str(),eRate[iSp][iDet]->Integral()));
-          else
-            latex.DrawLatex(0.56,0.85-0.05*(iSp-3),Form("%s: %.2e",spTit[iSp].c_str(),eRate[iSp][iDet]->Integral()));
        }
-    latex.SetTextColor(kRed+3);
-    latex.DrawLatex(0.12,0.85,"Radial Cut::");
-    latex.DrawLatex(0.12,0.80,Form("[%.0f,%.0f]mm",rmin[iDet],rmax[iDet]));
-    c_E[iDet]->SaveAs(Form("./temp/%s_kinE_det%d.pdf",tgt_gen_config.c_str(),Det[iDet]));
     }
-    gSystem->Exec(Form("pdfunite ./temp/%s_kinE_det*.pdf ./plots/%s_kinE_det%d_det%d.pdf",tgt_gen_config.c_str(),tgt_gen_config.c_str(),Det[0],Det[1]));
-    gSystem->Exec(Form("rm -rf ./temp/%s_kinE_det*.pdf",tgt_gen_config.c_str()));
-
 }
 
 void niceLogBins(TH1*h)

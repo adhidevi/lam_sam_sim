@@ -2,23 +2,40 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+<<<<<<< HEAD
     TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/PMTShielding";
+=======
+    TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/default-geo";
+>>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
     const string spTit[] = {"e-/#pi-","e+/#pi+","#gamma","neutron","e-/e+ E>1","primary E>1"};
     const int nSp = sizeof(spTit)/sizeof(*spTit);
     const string spH[nSp] ={"epiM","epiP","g","n","ee1","pri1"};
     map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
     int color[nSp] = {2,3,1,4,6,7};
+<<<<<<< HEAD
     const string detH[] = {"det28","det27"};
     map<int,int> dtM {{28,1},{27,2}};
     const int nDet = sizeof(detH)/sizeof(*detH);
     int Det[nDet] = {28,27};
     double rmin[nDet] = {1371.95,1371.95};
     double rmax[nDet] = {1651,1651};
+=======
+    const string detH[] = {"det28","det176"};
+    map<int,int> dtM {{28,1},{176,2}};
+    const int nDet = sizeof(detH)/sizeof(*detH);
+    int Det[nDet] = {28,176};
+    double rmin[nDet] = {200,200};
+    double rmax[nDet] = {600,600};
+>>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
     TH1D* eRate[nSp][nDet];
     void niceLogBins(TH1*);
     TFile* outfile;
     int beamGen(1);
+<<<<<<< HEAD
     const string tgt_gen_config = "PMTSh_beam_V10";
+=======
+    const string tgt_gen_config = "LH2_beam";
+>>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
 void energy_distribution_smallR(){
    gStyle->SetOptStat(0);
    for(int iSp=0;iSp<nSp;iSp++){
@@ -28,11 +45,19 @@ void energy_distribution_smallR(){
       niceLogBins(eRate[iSp][iDet]);
    }
    }
+<<<<<<< HEAD
     outfile = new TFile(Form("./rootfiles/DBM_kinE_dist_%s.root",tgt_gen_config.c_str()),"recreate");
     int nfile=0;
     Long64_t nentry=0;
     long nTotEv=0;
     for(int ifile=1001;ifile<=6000;ifile++){
+=======
+    outfile = new TFile(Form("./rootfiles/ring5_200to600mm_kinE_dist_%s.root",tgt_gen_config.c_str()),"recreate");
+    int nfile=0;
+    Long64_t nentry=0;
+    long nTotEv=0;
+    for(int ifile=1001;ifile<=1927;ifile++){
+>>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
        string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
        ifstream inf(infile.c_str());
        if(!inf){
