@@ -18,41 +18,23 @@ void radial_trans_radialCut_EG1(){
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 
 ///Change the following lines for which detectors you want to include////
-<<<<<<< HEAD
-  string detH[] = {"det174","det175","det28","det176","det27"};
+  string detH[] = {"det174","det28","det177"};
   const int nDet = sizeof(detH)/sizeof(*detH);
-  const int Det[nDet] = {174,175,28,176,27};
-  map<int,int> dtM {{174,1},{175,2},{28,3},{176,4},{27,5}};
-////////////////////////////////////////////////////////////////////////
-
-  double x_min = 0;
-  double x_max = 1900;
-=======
-  string detH[] = {"det173","det167","det168","det169","det170","det171","det172","det174","det28","det176"};
-  const int nDet = sizeof(detH)/sizeof(*detH);
-  const int Det[nDet] = {173,167,168,169,170,171,172,174,28,176};
-  map<int,int> dtM {{173,1},{167,2},{168,3},{169,4},{170,5},{171,6},{172,7},{174,8},{28,9},{176,10}};
+  const int Det[nDet] = {174,28,177};
+  map<int,int> dtM {{174,1},{28,2},{177,3}};
 ////////////////////////////////////////////////////////////////////////
 
   double x_min = 0;
   double x_max = 1700;
->>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
   const int nbin = 500;
   double bin_width = (x_max-x_min)/nbin;
   const string weight[] = {"rate","rateE","rateA"};
   const int nWt = sizeof(weight)/sizeof(*weight);
-<<<<<<< HEAD
 // if physics generators use the following
 //  const string weight_unit[nWt] ={"rate (GHz)","rate*E (GHz*MeV)","rate*A (GHz*ppm)"};
 // if beam generator use the following
   const string weight_unit[nWt] ={"hits/#thrownEvents","E*hits/#thrownEvents","A*hits/#thrownEvents"};
-=======
-  int beamGen(0);
-//for beam generator
-//  const string weight_unit[nWt] ={"hits/#thrownEvents","E*hits/#thrownEvents","A*hits/thrownEvents"};
-//for physics generators
-  const string weight_unit[nWt] ={"rate (GHz)","E*rate (MeV*GHz)","A*rate (ppb*GHz)"};
->>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
+
   TH1F* h_rate[nSp][nDet][nWt];
   TH1F* h_ratePzG0[nSp][nDet][nWt];
   TH1F* h_ratePzL0[nSp][nDet][nWt];
@@ -61,21 +43,15 @@ void radial_trans_radialCut_EG1(){
   TH2F* h_xyPzL0[nSp][nDet][nWt];
 
 ///Change the following lines as needed////
-<<<<<<< HEAD
   const string geometry = "PMTSh";//defaultGeo or PMTSh
-  const string tgt_gen_config = "PMTSh_beam_V10";
-  const string plotType = "radial_trans_rNoCut_allE";//rCut or rNoCut and EG1 or allE
+  const string tgt_gen_config = "PMTSh_beam_V11";
+  const string plotType = "radial_trans_rCut200mm_EG1";//rCut or rNoCut and EG1 or allE
   int beamGen(1);
-=======
-  const string geometry = "defaultGeo";//defaultGeo or PMTSh
-  const string tgt_gen_config = "LH2_ee_V1";
-  const string plotType = "radial_trans_rNoCut_EG1";//rCut or rNoCut and EG1 or allE
->>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
 //////////////////////////////////////////
 
   TFile* outfile = new TFile(Form("./rootfiles/%s_%s_%s.root",geometry.c_str(),tgt_gen_config.c_str(),plotType.c_str()),"recreate");
 ///Change this line for appropriate rootfile directory////
-  TString rootfile_dir = "/volatile/halla/moller12gev/devi/remoll_rootfiles/default-geo-10cmLH2";
+  TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/PMTShielding";
 //////////////////////////////////////////////////////////
 
   for(int iSp=0;iSp<nSp;iSp++){
@@ -101,11 +77,7 @@ void radial_trans_radialCut_EG1(){
   int nfile=0;
   Long64_t nentry=0;
   long nTotEv=0;
-<<<<<<< HEAD
   for(int ifile=1001;ifile<=6000;ifile++){
-=======
-  for(int ifile=1001;ifile<=1100;ifile++){
->>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
 ///Change this line for appropriate rootfiles////
     string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
 //////////////////////////////////////////////
@@ -150,7 +122,7 @@ void radial_trans_radialCut_EG1(){
         int dt = dtM[int(hit->at(j).det)]-1;
         if(dt==-1) continue;
 //comment following line if want to plot all r
-//        if(hit->at(j).r>700) continue;
+        if(hit->at(j).r<200) continue;
 //comment following line if want to plot all E
         if(hit->at(j).k<1) continue;
 
