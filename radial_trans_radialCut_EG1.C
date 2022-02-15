@@ -18,10 +18,11 @@ void radial_trans_radialCut_EG1(){
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 
 ///Change the following lines for which detectors you want to include////
-  string detH[] = {"det174","det28","det177"};
+  string detH[] = {"det174","det175","det178","det28","det177","det176"};
+//LAM, usScanner, DBM, ring5, dsScanner, SAM
   const int nDet = sizeof(detH)/sizeof(*detH);
-  const int Det[nDet] = {174,28,177};
-  map<int,int> dtM {{174,1},{28,2},{177,3}};
+  const int Det[nDet] = {174,175,178,28,177,176};
+  map<int,int> dtM {{174,1},{175,2},{178,3},{28,4},{177,5},{176,6}};
 ////////////////////////////////////////////////////////////////////////
 
   double x_min = 0;
@@ -43,15 +44,15 @@ void radial_trans_radialCut_EG1(){
   TH2F* h_xyPzL0[nSp][nDet][nWt];
 
 ///Change the following lines as needed////
-  const string geometry = "PMTSh";//defaultGeo or PMTSh
-  const string tgt_gen_config = "PMTSh_beam_V11";
-  const string plotType = "radial_trans_rCut200mm_EG1";//rCut or rNoCut and EG1 or allE
+  const string geometry = "develop";
+  const string tgt_gen_config = "LH2_beam_wrstCaseII";
+  const string plotType = "radial_trans_rNoCut_EG1";//rCut or rNoCut and EG1 or allE
   int beamGen(1);
 //////////////////////////////////////////
 
   TFile* outfile = new TFile(Form("./rootfiles/%s_%s_%s.root",geometry.c_str(),tgt_gen_config.c_str(),plotType.c_str()),"recreate");
 ///Change this line for appropriate rootfile directory////
-  TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/PMTShielding";
+  TString rootfile_dir = "/volatile/halla/moller12gev/devi/remoll_rootfiles/develop_br";
 //////////////////////////////////////////////////////////
 
   for(int iSp=0;iSp<nSp;iSp++){
@@ -122,7 +123,7 @@ void radial_trans_radialCut_EG1(){
         int dt = dtM[int(hit->at(j).det)]-1;
         if(dt==-1) continue;
 //comment following line if want to plot all r
-        if(hit->at(j).r<200) continue;
+//        if(hit->at(j).r>100) continue;
 //comment following line if want to plot all E
         if(hit->at(j).k<1) continue;
 
@@ -173,7 +174,7 @@ void radial_trans_radialCut_EG1(){
           }
         }
 
-        if(hit->at(j).trid==1){
+        if(hit->at(j).vz<-3875){
           h_rate[5][dt][0]->Fill(hit->at(j).r,rate);
           h_rate[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
           h_rate[5][dt][2]->Fill(hit->at(j).r,rate*(-1*ev->A));
