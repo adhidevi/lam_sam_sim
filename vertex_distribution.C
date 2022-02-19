@@ -10,61 +10,61 @@ void vertex_distribution(){
   gStyle->SetPadGridX(1);
   gStyle->SetPadGridY(1);
   TGaxis::SetMaxDigits(3);
-  
-  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all KE","primary all E"};
+
+  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","primary (KE>1 MeV)"}; 
+//  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all KE","primary all E"};
   const int nSp = sizeof(spTit)/sizeof(*spTit);
   const string spH[nSp] = {"epiM","epiP","g","n","ee","pri"};
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 
 ///Change the following lines for which detectors you want to include////
-  string detH[] = {"det28"};
+  string detH[] = {"det174","det178","det28","det176"};
+//LAM, DBM, ring5, SAM;
   const int nDet = sizeof(detH)/sizeof(*detH);
-  const int Det[nDet] = {28};
-  map<int,int> dtM {{28,1}};
+  const int Det[nDet] = {174};
+  map<int,int> dtM {{174,1}};
 ////////////////////////////////////////////////////////////////////////
 
-  const double x_min = -1500;
-  const double x_max = 1500;
-  const double z_min = -10000;
-  const double z_max = 40000;
+  const double x_min = -1900;
+  const double x_max = 1900;
+  const double z_min = -5000;
+  const double z_max = 30000;
+  const double r_min = 1010;
+  const double r_max = 1130;
   const int nbin = 500;
-  const double rmin = 200;
-  const double rmax = 600;
   const string weight[] = {"rate","rateE"};
   const int nWt = sizeof(weight)/sizeof(*weight);
   TH2F* h_VxVz[nSp][nDet][nWt];
   TH2F* h_VxVzPzG0[nSp][nDet][nWt];
   TH2F* h_VxVzPzL0[nSp][nDet][nWt];
+  TH2F* h_VyVz[nSp][nDet][nWt];
+  TH2F* h_VyVzPzG0[nSp][nDet][nWt];
+  TH2F* h_VyVzPzL0[nSp][nDet][nWt];
 
 ///Change the following lines as needed////
-<<<<<<< HEAD
-  const string geometry = "PMTSh";//defaultGeo or PMTSh
-  const string tgt_gen_config = "PMTSh_beam_V6";
-=======
-  const string geometry = "defaultGeo";//defaultGeo or PMTSh
-  const string tgt_gen_config = "LH2_beam";
->>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
-  const string plotType = "vertex_distribution_allE";
+  const string geometry = "develop";//defaultGeo or PMTSh
+  const string tgt_gen_config = "LH2_beam_V1";
+  const string plotType = "vertex_distribution_EG1";
   int beamGen(1);
 
 //////////////////////////////////////////
 
-  TFile* outfile = new TFile(Form("./rootfiles/%s_%s_%s.root",geometry.c_str(),tgt_gen_config.c_str(),plotType.c_str()),"recreate");
+  TFile* outfile = new TFile(Form("./rootfiles/%s_%s_%s_rCut.root",geometry.c_str(),tgt_gen_config.c_str(),plotType.c_str()),"recreate");
 ///Change this line for appropriate rootfile directory////
-<<<<<<< HEAD
-  TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/PMTShielding";
-=======
-  TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/default-geo";
->>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
+  TString rootfile_dir = "/volatile/halla/moller12gev/devi/remoll_rootfiles/develop_br";
 //////////////////////////////////////////////////////////
 
   for(int iSp=0;iSp<nSp;iSp++){
    for(int iDet=0;iDet<nDet;iDet++){
     for(int iWt=0;iWt<nWt;iWt++){
-      string title2D = Form("%s vertex dist. on %s plane (%s), %.0f<=r=<%.0f;vz (mm);vx (mm);hits/#thrownEvents",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),rmin,rmax);
-      h_VxVz[iSp][iDet][iWt] = new TH2F(Form("%s_VxVz_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title2D.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
-      h_VxVzPzG0[iSp][iDet][iWt] = new TH2F(Form("%s_VxVzPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title2D.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
-      h_VxVzPzL0[iSp][iDet][iWt] = new TH2F(Form("%s_VxVzPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),title2D.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
+      string titleXZ = Form("%s vertex dist. on %s plane (%s);vz (mm);vx (mm);hits/#thrownEvents",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str());
+      string titleYZ = Form("%s vertex dist. on %s plane (%s);vz (mm);vy (mm);hits/#thrownEvents",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str());
+      h_VxVz[iSp][iDet][iWt] = new TH2F(Form("%s_VxVz_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleXZ.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
+      h_VxVzPzG0[iSp][iDet][iWt] = new TH2F(Form("%s_VxVzPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleXZ.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
+      h_VxVzPzL0[iSp][iDet][iWt] = new TH2F(Form("%s_VxVzPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleXZ.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
+      h_VyVz[iSp][iDet][iWt] = new TH2F(Form("%s_VyVz_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleYZ.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
+      h_VyVzPzG0[iSp][iDet][iWt] = new TH2F(Form("%s_VyVzPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleYZ.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
+      h_VyVzPzL0[iSp][iDet][iWt] = new TH2F(Form("%s_VyVzPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleYZ.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
     }
    }
   }
@@ -72,11 +72,7 @@ void vertex_distribution(){
   int nfile=0;
   Long64_t nentry=0;
   long nTotEv=0;
-<<<<<<< HEAD
-  for(int ifile=1001;ifile<=2000;ifile++){
-=======
-  for(int ifile=1001;ifile<=1927;ifile++){
->>>>>>> 0c4366e67ad16fe5832ddc8a375d8e73cd22dbf0
+  for(int ifile=1001;ifile<=6000;ifile++){
 ///Change this line for appropriate rootfiles////
     string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
 //////////////////////////////////////////////
@@ -121,40 +117,59 @@ void vertex_distribution(){
         int dt = dtM[int(hit->at(j).det)]-1;
         if(dt==-1) continue;
 //comment following line if want to plot all r
-        if(hit->at(j).r<200 || hit->at(j).r>600) continue;
+        if(hit->at(j).r<r_min || hit->at(j).r>r_max) continue;
+        if(hit->at(j).k<1) continue;
 
         h_VxVz[sp][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
         h_VxVz[sp][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
+        h_VyVz[sp][dt][0]->Fill(hit->at(j).vz,hit->at(j).vy,rate);
+        h_VyVz[sp][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
 
         if(hit->at(j).pz>=0){
           h_VxVzPzG0[sp][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
           h_VxVzPzG0[sp][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
+          h_VyVzPzG0[sp][dt][0]->Fill(hit->at(j).vz,hit->at(j).vy,rate);
+          h_VyVzPzG0[sp][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
         }else{
           h_VxVzPzL0[sp][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
           h_VxVzPzL0[sp][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
+          h_VyVzPzL0[sp][dt][0]->Fill(hit->at(j).vz,hit->at(j).vy,rate);
+          h_VyVzPzL0[sp][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
         }
 
         if(hit->at(j).pid==11 || hit->at(j).pid==-11){
           h_VxVz[4][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
           h_VxVz[4][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
+          h_VyVz[4][dt][0]->Fill(hit->at(j).vz,hit->at(j).vy,rate);
+          h_VyVz[4][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
           if(hit->at(j).pz>=0){
             h_VxVzPzG0[4][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
             h_VxVzPzG0[4][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
+            h_VyVzPzG0[4][dt][0]->Fill(hit->at(j).vz,hit->at(j).vy,rate);
+            h_VyVzPzG0[4][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
           }else{
             h_VxVzPzL0[4][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
             h_VxVzPzL0[4][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
+            h_VyVzPzL0[4][dt][0]->Fill(hit->at(j).vz,hit->at(j).vy,rate);
+            h_VyVzPzL0[4][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
           }
         }
 
-        if(hit->at(j).trid==1){
+        if(hit->at(j).vz<-3875){
           h_VxVz[5][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
           h_VxVz[5][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
+          h_VyVz[5][dt][0]->Fill(hit->at(j).vz,hit->at(j).vy,rate);
+          h_VyVz[5][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
           if(hit->at(j).pz>=0){
             h_VxVzPzG0[5][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
             h_VxVzPzG0[5][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
+            h_VyVzPzG0[5][dt][0]->Fill(hit->at(j).vz,hit->at(j).vy,rate);
+            h_VyVzPzG0[5][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
           }else{
             h_VxVzPzG0[5][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
             h_VxVzPzG0[5][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
+            h_VyVzPzG0[5][dt][0]->Fill(hit->at(j).vz,hit->at(j).vy,rate);
+            h_VyVzPzG0[5][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
           }
         }
 
@@ -175,14 +190,23 @@ void vertex_distribution(){
          h_VxVz[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_VxVzPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_VxVzPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_VyVz[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_VyVzPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_VyVzPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
        }else{
          h_VxVz[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
          h_VxVzPzG0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
          h_VxVzPzL0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_VyVz[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_VyVzPzG0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_VyVzPzL0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
        }
          h_VxVz[iSp][iDet][iWt]->Write();
          h_VxVzPzG0[iSp][iDet][iWt]->Write();
          h_VxVzPzL0[iSp][iDet][iWt]->Write();
+         h_VyVz[iSp][iDet][iWt]->Write();
+         h_VyVzPzG0[iSp][iDet][iWt]->Write();
+         h_VyVzPzL0[iSp][iDet][iWt]->Write();
       }
     }
   }

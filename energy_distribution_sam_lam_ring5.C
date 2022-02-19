@@ -3,23 +3,23 @@
 #include <iostream>
 #include <fstream>
 
-TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/PMTShielding";
+TString rootfile_dir = "/volatile/halla/moller12gev/devi/remoll_rootfiles/develop_br";
 const string spTit[] = {"e-/#pi-","e+/#pi+","#gamma","neutron","e-/e+ (E>1MeV)","primary (KE>1MeV)"};
 const int nSp = sizeof(spTit)/sizeof(*spTit);
 const string spH[nSp] ={"epiM","epiP","g","n","ee1","pri1"};
 map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 int color[nSp] = {2,3,1,4,6,7};
-const string detH[] = {"det174","det28","det176"};
-map<int,int> dtM {{174,1},{28,2},{176,3}};
+const string detH[] = {"det174","det178","det28","det176"};
+map<int,int> dtM {{174,1},{178,2},{28,3},{176,4}};
 const int nDet = sizeof(detH)/sizeof(*detH);
-int Det[nDet] = {174,28,176};
-double rmin[nDet] = {550,670,850};
-double rmax[nDet] = {650,770,950};
+int Det[nDet] = {174,178,28,176};
+double rmin[nDet] = {1010,1400,920,43};
+double rmax[nDet] = {1010+120,1400+100,920+140,43+10};
 TH1D* eRate[nSp][nDet];
 void niceLogBins(TH1*);
 TFile* outfile;
-int beamGen(0);
-const string tgt_gen_config = "PMTSh_epinel_V1";
+int beamGen(1);
+const string tgt_gen_config = "LH2_beam_V1";
 string hist_title;
 
 void energy_distribution_sam_lam_ring5(){
@@ -37,11 +37,11 @@ void energy_distribution_sam_lam_ring5(){
       niceLogBins(eRate[iSp][iDet]);
     }
    }
-    outfile = TFile::Open(Form("./rootfiles/sam_lam_ring5_eppeak_kinE_%s.root",tgt_gen_config.c_str()),"RECREATE");
+    outfile = TFile::Open(Form("./rootfiles/sam_lam_dbm_ring5_kinE_%s.root",tgt_gen_config.c_str()),"RECREATE");
     int nfile=0;
     Long64_t nentry=0;
     long nTotEv=0;
-    for(int ifile=1001;ifile<=1100;ifile++){
+    for(int ifile=1001;ifile<=6000;ifile++){
        string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
        ifstream inf(infile.c_str());
        if(!inf){
@@ -89,7 +89,7 @@ void energy_distribution_sam_lam_ring5(){
              if(hit->at(j).k>1 && (hit->at(j).pid==11 || hit->at(j).pid==-11)){
                eRate[4][dt]->Fill(hit->at(j).k,rate);
              }
-             if(hit->at(j).k>1 && hit->at(j).trid==1){
+             if(hit->at(j).k>1 && hit->at(j).vz<-3875){
                eRate[5][dt]->Fill(hit->at(j).k,rate);
              }
            }

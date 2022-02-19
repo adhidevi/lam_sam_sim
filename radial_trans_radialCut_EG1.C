@@ -11,8 +11,8 @@ void radial_trans_radialCut_EG1(){
   gStyle->SetPadGridY(1);
   TGaxis::SetMaxDigits(3);
   
-  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","primary (KE>1 MeV)"};
-//  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all KE","primary all E"};
+//  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","primary (KE>1 MeV)"};
+  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all KE","primary all E"};
   const int nSp = sizeof(spTit)/sizeof(*spTit);
   const string spH[nSp] = {"epiM","epiP","g","n","ee","pri"};
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
@@ -26,7 +26,7 @@ void radial_trans_radialCut_EG1(){
 ////////////////////////////////////////////////////////////////////////
 
   double x_min = 0;
-  double x_max = 1700;
+  double x_max = 1900;
   const int nbin = 500;
   double bin_width = (x_max-x_min)/nbin;
   const string weight[] = {"rate","rateE","rateA"};
@@ -45,8 +45,8 @@ void radial_trans_radialCut_EG1(){
 
 ///Change the following lines as needed////
   const string geometry = "develop";
-  const string tgt_gen_config = "LH2_beam_wrstCaseII";
-  const string plotType = "radial_trans_rNoCut_EG1";//rCut or rNoCut and EG1 or allE
+  const string tgt_gen_config = "LH2_beam_wrstCaseIII";
+  const string plotType = "radial_trans_rNoCut_allE";//rCut or rNoCut and EG1 or allE
   int beamGen(1);
 //////////////////////////////////////////
 
@@ -125,7 +125,7 @@ void radial_trans_radialCut_EG1(){
 //comment following line if want to plot all r
 //        if(hit->at(j).r>100) continue;
 //comment following line if want to plot all E
-        if(hit->at(j).k<1) continue;
+//        if(hit->at(j).k<1) continue;
 
         h_rate[sp][dt][0]->Fill(hit->at(j).r,rate);
         h_rate[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
