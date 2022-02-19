@@ -11,15 +11,15 @@ void vertex_distribution(){
   gStyle->SetPadGridY(1);
   TGaxis::SetMaxDigits(3);
 
-  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","primary (KE>1 MeV)"}; 
-//  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all KE","primary all E"};
+//  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","primary (KE>1 MeV)"}; 
+  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all KE","primary all E"};
   const int nSp = sizeof(spTit)/sizeof(*spTit);
   const string spH[nSp] = {"epiM","epiP","g","n","ee","pri"};
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 
 ///Change the following lines for which detectors you want to include////
-  string detH[] = {"det174","det178","det28","det176"};
-//LAM, DBM, ring5, SAM;
+  string detH[] = {"det174"};
+//LAM
   const int nDet = sizeof(detH)/sizeof(*detH);
   const int Det[nDet] = {174};
   map<int,int> dtM {{174,1}};
@@ -44,7 +44,7 @@ void vertex_distribution(){
 ///Change the following lines as needed////
   const string geometry = "develop";//defaultGeo or PMTSh
   const string tgt_gen_config = "LH2_beam_V1";
-  const string plotType = "vertex_distribution_EG1";
+  const string plotType = "vertex_distribution_allE";
   int beamGen(1);
 
 //////////////////////////////////////////
@@ -118,7 +118,7 @@ void vertex_distribution(){
         if(dt==-1) continue;
 //comment following line if want to plot all r
         if(hit->at(j).r<r_min || hit->at(j).r>r_max) continue;
-        if(hit->at(j).k<1) continue;
+//        if(hit->at(j).k<1) continue;
 
         h_VxVz[sp][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
         h_VxVz[sp][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
