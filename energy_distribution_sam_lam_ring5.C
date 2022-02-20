@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 
-TString rootfile_dir = "/volatile/halla/moller12gev/devi/remoll_rootfiles/develop_br";
+TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/PMTShielding";
 const string spTit[] = {"e-/#pi-","e+/#pi+","#gamma","neutron","e-/e+ (E>1MeV)","primary (KE>1MeV)"};
 const int nSp = sizeof(spTit)/sizeof(*spTit);
 const string spH[nSp] ={"epiM","epiP","g","n","ee1","pri1"};
@@ -19,7 +19,7 @@ TH1D* eRate[nSp][nDet];
 void niceLogBins(TH1*);
 TFile* outfile;
 int beamGen(1);
-const string tgt_gen_config = "LH2_beam_V1";
+const string tgt_gen_config = "PMTSh_beam_V10";
 string hist_title;
 
 void energy_distribution_sam_lam_ring5(){

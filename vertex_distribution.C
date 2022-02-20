@@ -11,8 +11,8 @@ void vertex_distribution(){
   gStyle->SetPadGridY(1);
   TGaxis::SetMaxDigits(3);
 
-//  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","primary (KE>1 MeV)"}; 
-  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all KE","primary all E"};
+  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","primary (KE>1 MeV)"}; 
+//  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all KE","primary all E"};
   const int nSp = sizeof(spTit)/sizeof(*spTit);
   const string spH[nSp] = {"epiM","epiP","g","n","ee","pri"};
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
@@ -42,16 +42,16 @@ void vertex_distribution(){
   TH2F* h_VyVzPzL0[nSp][nDet][nWt];
 
 ///Change the following lines as needed////
-  const string geometry = "develop";//defaultGeo or PMTSh
-  const string tgt_gen_config = "LH2_beam_V1";
-  const string plotType = "vertex_distribution_allE";
+  const string geometry = "PMTSh";//defaultGeo or PMTSh
+  const string tgt_gen_config = "PMTSh_beam_V10";
+  const string plotType = "vertex_distribution_EG1";
   int beamGen(1);
 
 //////////////////////////////////////////
 
   TFile* outfile = new TFile(Form("./rootfiles/%s_%s_%s_rCut.root",geometry.c_str(),tgt_gen_config.c_str(),plotType.c_str()),"recreate");
 ///Change this line for appropriate rootfile directory////
-  TString rootfile_dir = "/volatile/halla/moller12gev/devi/remoll_rootfiles/develop_br";
+  TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/PMTShielding";
 //////////////////////////////////////////////////////////
 
   for(int iSp=0;iSp<nSp;iSp++){
@@ -118,7 +118,7 @@ void vertex_distribution(){
         if(dt==-1) continue;
 //comment following line if want to plot all r
         if(hit->at(j).r<r_min || hit->at(j).r>r_max) continue;
-//        if(hit->at(j).k<1) continue;
+        if(hit->at(j).k<1) continue;
 
         h_VxVz[sp][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
         h_VxVz[sp][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
