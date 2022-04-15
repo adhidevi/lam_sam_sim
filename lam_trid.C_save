@@ -1,0 +1,286 @@
+#include "remolltypes.hh"
+#include <sstream>
+#include <iostream>
+#include <fstream>
+void isValid1(std::vector<remollGenericDetectorHit_t> *fHit, std::vector<int> &coll6Btrid);
+const double pi = TMath::Pi();
+const double lam_length = 360.0;//azimuthal length of LAM quartz
+const double lam_rin = 1010.0;//inner radius of LAM quartz
+double lam_angle = atan(lam_length/lam_rin);
+double sep_mid = 2*pi/14.0;
+
+void lam_trid(){
+  gROOT->Reset();
+  gStyle->SetOptStat(0);
+  gStyle->SetTitleYOffset(1.3);
+  gStyle->SetPadGridX(1);
+  gStyle->SetPadGridY(1);
+  TGaxis::SetMaxDigits(3);
+
+  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","primary (KE>1 MeV)"};
+//  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all KE","primary all E"};
+  const int nSp = sizeof(spTit)/sizeof(*spTit);
+  const string spH[nSp] = {"epiM","epiP","g","n","ee","pri"};
+  map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
+
+///Change the following lines for which detectors you want to include////
+  string detH[] = {"det65","det66","det5719","det174"};
+  const int nDet = sizeof(detH)/sizeof(*detH);
+  const int Det[nDet] = {65,66,5719,174};
+  map<int,int> dtM {{65,1},{66,2},{5719,3},{174,4}};
+////////////////////////////////////////////////////////////////////////
+
+  double rmin, rmax;
+  const string weight[] = {"rate"};
+  const int nWt = sizeof(weight)/sizeof(*weight);
+  const string weight_unit[nWt] ={"hits/#thrownEvents"};
+
+  TH1F* h_d_r[nSp][nDet][nWt];
+  TH1F* h_d_rPzG0[nSp][nDet][nWt];
+  TH1F* h_d_rPzL0[nSp][nDet][nWt];
+  TH2F* h_xy[nSp][nDet][nWt];
+  TH2F* h_xyPzG0[nSp][nDet][nWt];
+  TH2F* h_xyPzL0[nSp][nDet][nWt];
+  TH2F* h_rz[nSp][nDet][nWt];
+  TH2F* h_rzPzG0[nSp][nDet][nWt];
+  TH2F* h_rzPzL0[nSp][nDet][nWt];
+  TH1F* h_d_p[nSp][nDet][nWt];
+  TH1F* h_d_pPzG0[nSp][nDet][nWt];
+  TH1F* h_d_pPzL0[nSp][nDet][nWt];
+  TH1F* h_d_th[nSp][nDet][nWt];
+  TH1F* h_d_thPzG0[nSp][nDet][nWt];
+  TH1F* h_d_thPzL0[nSp][nDet][nWt];
+
+///Change the following lines as needed////
+  const string geometry = "develop";
+  const string tgt_gen_config = "LH2_beam_V9";
+  const string plotType = "lam_trid_EG1";//rCut or rNoCut and EG1 or allE
+  int beamGen(1);
+//////////////////////////////////////////
+
+  TFile* outfile = new TFile(Form("./rootfiles/%s_%s_%s_NoPhiCut_NoVzCutAtColl6B.root",geometry.c_str(),tgt_gen_config.c_str(),plotType.c_str()),"recreate");
+///Change this line for appropriate rootfile directory////
+  TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/develop_br";
+//////////////////////////////////////////////////////////
+
+  for(int iSp=0;iSp<nSp;iSp++){
+   for(int iDet=0;iDet<nDet;iDet++){
+    if(Det[iDet]==65 || Det[iDet]==66){rmin=300; rmax=800;}
+    if(Det[iDet]==174 || Det[iDet]==5719){rmin=800; rmax=1300;}
+    for(int iWt=0;iWt<nWt;iWt++){
+      string titleR = Form("%s Radial dist. on %s plane (%s);Radius (mm);%s/%.1fmm",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),weight_unit[iWt].c_str(),(rmax-rmin)/500.0);
+      h_d_r[iSp][iDet][iWt] = new TH1F(Form("%s_r_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleR.c_str(),500,rmin,rmax);
+      h_d_rPzG0[iSp][iDet][iWt] = new TH1F(Form("%s_rPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleR.c_str(),500,rmin,rmax);
+      h_d_rPzL0[iSp][iDet][iWt] = new TH1F(Form("%s_rPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleR.c_str(),500,rmin,rmax);
+
+      string titleP = Form("%s Momentum dist. on %s plane (%s);Momentum (MeV);%s/%.1fMeV",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),weight_unit[iWt].c_str(),(1200-0)/1200.0);
+      h_d_p[iSp][iDet][iWt] = new TH1F(Form("%s_p_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleP.c_str(),1200,0,1200);
+      h_d_pPzG0[iSp][iDet][iWt] = new TH1F(Form("%s_pPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleP.c_str(),1200,0,1200);
+      h_d_pPzL0[iSp][iDet][iWt] = new TH1F(Form("%s_pPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleP.c_str(),1200,0,1200);
+
+      string titleTh = Form("%s Scatt. Angle dist. on %s plane (%s);Scatt. Angle (deg);%s/%.1fdeg",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),weight_unit[iWt].c_str(),(15.0-0)/100.0);
+      h_d_th[iSp][iDet][iWt] = new TH1F(Form("%s_th_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleTh.c_str(),100,0,15.0);
+      h_d_thPzG0[iSp][iDet][iWt] = new TH1F(Form("%s_thPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleTh.c_str(),100,0,15.0);
+      h_d_thPzL0[iSp][iDet][iWt] = new TH1F(Form("%s_thPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleTh.c_str(),100,0,15.0);
+
+      string titleXY = Form("%s XY dist. on %s plane (%s);x (mm);y (mm)",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str());
+      h_xy[iSp][iDet][iWt] = new TH2F(Form("%s_xy_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleXY.c_str(),400,-rmax,rmax,400,-rmax,rmax);
+      h_xyPzG0[iSp][iDet][iWt] = new TH2F(Form("%s_xyPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleXY.c_str(),400,-rmax,rmax,400,-rmax,rmax);
+      h_xyPzL0[iSp][iDet][iWt] = new TH2F(Form("%s_xyPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleXY.c_str(),400,-rmax,rmax,400,-rmax,rmax);
+
+      string titleRZ = Form("%s Vertex rz dist. on %s plane (%s);vz (mm);vr (mm)",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str());
+      h_rz[iSp][iDet][iWt] = new TH2F(Form("%s_rz_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleRZ.c_str(),3800,-6000,32000,400,-rmax,rmax);
+      h_rzPzG0[iSp][iDet][iWt] = new TH2F(Form("%s_rzPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleRZ.c_str(),3800,-6000,32000,400,-rmax,rmax);
+      h_rzPzL0[iSp][iDet][iWt] = new TH2F(Form("%s_rzPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleRZ.c_str(),3800,-6000,32000,400,-rmax,rmax);
+
+      h_d_r[iSp][iDet][iWt]->Sumw2();
+      h_d_rPzG0[iSp][iDet][iWt]->Sumw2();
+      h_d_rPzL0[iSp][iDet][iWt]->Sumw2();
+      h_d_p[iSp][iDet][iWt]->Sumw2();
+      h_d_pPzG0[iSp][iDet][iWt]->Sumw2();
+      h_d_pPzL0[iSp][iDet][iWt]->Sumw2();
+      h_d_th[iSp][iDet][iWt]->Sumw2();
+      h_d_thPzG0[iSp][iDet][iWt]->Sumw2();
+      h_d_thPzL0[iSp][iDet][iWt]->Sumw2();
+    }
+   }
+  }
+
+  int nfile=0;
+  Long64_t nentry=0;
+  long nTotEv=0;
+  for(int ifile=1001;ifile<=6000;ifile++){
+///Change this line for appropriate rootfiles////
+    string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
+//////////////////////////////////////////////
+    ifstream inf(infile.c_str());
+    if(!inf){
+      cout<<Form("Skipping %s. File doesn't exist.",infile.c_str())<<endl;
+      continue;
+    }
+    TFile *fin = TFile::Open(infile.c_str(),"READ");
+    if(fin->TestBit(TFile::kRecovered)){
+      cout<<Form("Skipping %s. Recovered file.",infile.c_str())<<endl;
+      continue;
+    }
+    nfile++;
+   
+    TTree *T = (TTree*)fin->Get("T");
+    if(T==0) return 0;
+
+    nentry = T->GetEntries();
+    cout<<Form("Found %lld entries in filesplit %d",nentry,nfile)<<endl;
+    nTotEv+=nentry;
+
+    std::vector<remollGenericDetectorHit_t> *hit =0;
+    Double_t rate = 0;
+    T->SetBranchAddress("hit", & hit);
+    T->SetBranchAddress("rate", & rate);
+   
+    for(Long64_t ientry=0;ientry<nentry;ientry++){
+      T->GetEntry(ientry);
+      std::vector<int> coll6Btrid;
+      std::vector<int>::iterator coll6Bit;
+      isValid1(hit,coll6Btrid);
+      for(int j=0;j<hit->size();j++){
+        if(std::isnan(rate) || std::isinf(rate)) continue;
+        if(beamGen) rate = 1.0;
+
+        coll6Bit = find(coll6Btrid.begin(),coll6Btrid.end(),hit->at(j).trid);
+
+        int sp = spM[int(hit->at(j).pid)]-1;
+        if(sp==-1) continue;
+        int dt = dtM[int(hit->at(j).det)]-1;
+        if(dt==-1) continue;
+        if(hit->at(j).k<1) continue;
+
+        if(coll6Bit!=coll6Btrid.end()){
+         if(hit->at(j).trid==*coll6Bit){
+           double theta = (180.0/pi)*atan2(sqrt(pow(hit->at(j).px,2)+pow(hit->at(j).py,2)),hit->at(j).pz);
+           h_d_r[sp][dt][0]->Fill(hit->at(j).r,rate);
+           h_xy[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+           h_d_p[sp][dt][0]->Fill(hit->at(j).p,rate);
+           h_d_th[sp][dt][0]->Fill(theta,rate);
+           h_rz[sp][dt][0]->Fill(hit->at(j).vz,sqrt(pow(hit->at(j).vx,2)+pow(hit->at(j).vy,2)),rate);
+
+           if(hit->at(j).pz>=0){
+             h_d_rPzG0[sp][dt][0]->Fill(hit->at(j).r,rate);
+             h_xyPzG0[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+             h_d_pPzG0[sp][dt][0]->Fill(hit->at(j).p,rate);
+             h_d_thPzG0[sp][dt][0]->Fill(theta,rate);
+             h_rzPzG0[sp][dt][0]->Fill(hit->at(j).vz,sqrt(pow(hit->at(j).vx,2)+pow(hit->at(j).vy,2)),rate);
+           }else{
+             h_d_rPzL0[sp][dt][0]->Fill(hit->at(j).r,rate);
+             h_xyPzL0[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+             h_d_pPzL0[sp][dt][0]->Fill(hit->at(j).p,rate);
+             h_d_thPzL0[sp][dt][0]->Fill(theta,rate);
+             h_rzPzL0[sp][dt][0]->Fill(hit->at(j).vz,sqrt(pow(hit->at(j).vx,2)+pow(hit->at(j).vy,2)),rate);
+           }
+
+           if(hit->at(j).pid==11 || hit->at(j).pid==-11){
+             h_d_r[4][dt][0]->Fill(hit->at(j).r,rate);
+             h_xy[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+             h_d_p[4][dt][0]->Fill(hit->at(j).p,rate);
+             h_d_th[4][dt][0]->Fill(theta,rate);
+             h_rz[4][dt][0]->Fill(hit->at(j).vz,sqrt(pow(hit->at(j).vx,2)+pow(hit->at(j).vy,2)),rate);
+             if(hit->at(j).pz>=0){
+               h_d_rPzG0[4][dt][0]->Fill(hit->at(j).r,rate);
+               h_xyPzG0[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+               h_d_pPzG0[4][dt][0]->Fill(hit->at(j).p,rate);
+               h_d_thPzG0[4][dt][0]->Fill(theta,rate);
+               h_rzPzG0[4][dt][0]->Fill(hit->at(j).vz,sqrt(pow(hit->at(j).vx,2)+pow(hit->at(j).vy,2)),rate);
+             }else{
+               h_d_rPzL0[4][dt][0]->Fill(hit->at(j).r,rate);
+               h_xyPzL0[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+               h_d_pPzL0[4][dt][0]->Fill(hit->at(j).p,rate);
+               h_d_thPzL0[4][dt][0]->Fill(theta,rate);
+               h_rzPzL0[4][dt][0]->Fill(hit->at(j).vz,sqrt(pow(hit->at(j).vx,2)+pow(hit->at(j).vy,2)),rate);
+             }
+           }
+
+           if(hit->at(j).vz<-3875){
+             h_d_r[5][dt][0]->Fill(hit->at(j).r,rate);
+             h_xy[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+             h_d_p[5][dt][0]->Fill(hit->at(j).p,rate);
+             h_d_th[5][dt][0]->Fill(theta,rate);
+             h_rz[5][dt][0]->Fill(hit->at(j).vz,sqrt(pow(hit->at(j).vx,2)+pow(hit->at(j).vy,2)),rate);
+             if(hit->at(j).pz>=0){
+               h_d_rPzG0[5][dt][0]->Fill(hit->at(j).r,rate);
+               h_xyPzG0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+               h_d_pPzG0[5][dt][0]->Fill(hit->at(j).p,rate);
+               h_d_thPzG0[5][dt][0]->Fill(theta,rate);
+               h_rzPzG0[5][dt][0]->Fill(hit->at(j).vz,sqrt(pow(hit->at(j).vx,2)+pow(hit->at(j).vy,2)),rate);
+             }else{
+               h_d_rPzL0[5][dt][0]->Fill(hit->at(j).r,rate);
+               h_xyPzG0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+               h_d_pPzL0[5][dt][0]->Fill(hit->at(j).p,rate);
+               h_d_thPzL0[5][dt][0]->Fill(theta,rate);
+               h_rzPzL0[5][dt][0]->Fill(hit->at(j).vz,sqrt(pow(hit->at(j).vx,2)+pow(hit->at(j).vy,2)),rate);
+             }
+           }
+         }
+        }
+      }
+    }
+    delete fin;
+  }
+
+  cout<<Form("Total number of file splits: %d",nfile)<<endl;
+  cout<<Form("Total number of entries: %ld",nTotEv)<<endl;
+   
+  for(int iDet=0;iDet<nDet;iDet++){
+    outfile->mkdir(Form("%s",detH[iDet].c_str()));
+    outfile->cd(Form("%s",detH[iDet].c_str()));
+    for(int iSp=0;iSp<nSp;iSp++){
+      for(int iWt=0;iWt<nWt;iWt++){
+         h_d_r[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_d_rPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_d_rPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_xy[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_xyPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_xyPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_d_p[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_d_pPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_d_pPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_d_th[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_d_thPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_d_thPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_rz[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_rzPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_rzPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+
+         h_d_r[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_d_rPzG0[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_d_rPzL0[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_xy[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_xyPzG0[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_xyPzL0[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_d_p[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_d_pPzG0[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_d_pPzL0[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_d_th[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_d_thPzG0[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_d_thPzL0[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_rz[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_rzPzG0[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+         h_rzPzL0[iSp][iDet][iWt]->Write("",TObject::kOverwrite);
+      }
+    }
+  }
+}
+
+void isValid1(std::vector<remollGenericDetectorHit_t> *hit, std::vector<int> &coll6Btrid){
+  for(size_t j=0;j<hit->size();j++){
+    double phi = hit->at(j).ph;
+//    if(phi<0) phi +=2.0*pi;
+//    double modphi = fmod(phi,2.0*pi/7.0);
+//    if(modphi<3.0*pi/28.0 || modphi>5.0*pi/28.0) continue;
+//    for(int sep=1;sep<=14;sep++){
+//      if(sep%2==1 && (abs(phi)>=sep*sep_mid-lam_angle/2.0 && abs(phi)<=sep*sep_mid+lam_angle/2.0)){
+        if(hit->at(j).det==65 && hit->at(j).pid==11 /*&& hit->at(j).vz<=-3875 */&& hit->at(j).pz>=0 && (hit->at(j).r>=365 && hit->at(j).r<=565)){
+          coll6Btrid.push_back(hit->at(j).trid);
+        }
+//      }
+//    }
+  }
+}

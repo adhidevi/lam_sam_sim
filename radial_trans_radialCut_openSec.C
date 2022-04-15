@@ -3,7 +3,13 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-void radial_trans_radialCut_EG1(){
+const double pi = TMath::Pi();
+const double lam_length = 360.0;//azimuthal length of LAM quartz
+const double lam_rin = 1010.0;//inner radius of LAM quartz
+double lam_angle = atan(lam_length/lam_rin);
+double sep_mid = 2*pi/14.0;
+
+void radial_trans_radialCut_openSec(){
   gROOT->Reset();
   gStyle->SetOptStat(0);
   gStyle->SetTitleYOffset(1.3);
@@ -11,29 +17,29 @@ void radial_trans_radialCut_EG1(){
   gStyle->SetPadGridY(1);
   TGaxis::SetMaxDigits(3);
   
-//  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","all PID vz<=-3875 (KE>1 MeV)","e-/#pi- vz<=-3875 (KE>1 MeV)","e- trid==1 (KE>1 MeV)"};
-  const string spTit[] = {"e-/#pi- all KE","e+/#pi+ all KE","#gamma all KE","neutron all KE","e-/e+ all KE","all PID vz<=-3875 all KE","e-/#pi- vz<=-3875 all KE","e- trid==1 all KE"};
+  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","primary (KE>1 MeV)"};
+//  const string spTit[] = {"e-/#pi- all E","e+/#pi+ all E","#gamma all E","neutron all E","e-/e+ all KE","primary all E"};
   const int nSp = sizeof(spTit)/sizeof(*spTit);
-  const string spH[nSp] = {"epiM","epiP","g","n","ee","allPIDvzCut","epiMvzCut","eTrIdCut"};
+  const string spH[nSp] = {"epiM","epiP","g","n","ee","pri"};
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 
 ///Change the following lines for which detectors you want to include////
-  string detH[] = {"det174","det181","det5719"};
+  string detH[] = {"det174","det175","det178","det28","det177","det176"};
   const int nDet = sizeof(detH)/sizeof(*detH);
-  const int Det[nDet] = {174,181,5719};
-  map<int,int> dtM {{174,1},{181,2},{5719,3}};
+  const int Det[nDet] = {174,175,178,28,177,176};
+  map<int,int> dtM {{174,1},{175,2},{178,3},{28,4},{177,5},{176,6}};
 ////////////////////////////////////////////////////////////////////////
 
   double x_min = 0;
   double x_max = 1900;
   const int nbin = 500;
   double bin_width = (x_max-x_min)/nbin;
-  const string weight[] = {"rate"/*,"rateE"*/};
+  const string weight[] = {"rate","rateE"};
   const int nWt = sizeof(weight)/sizeof(*weight);
 // if physics generators use the following
 //  const string weight_unit[nWt] ={"rate (GHz)","rate*E (GHz*MeV)"};
 // if beam generator use the following
-  const string weight_unit[nWt] ={"hits/#thrownEvents"/*,"E*hits/#thrownEvents"*/};
+  const string weight_unit[nWt] ={"hits/#thrownEvents","E*hits/#thrownEvents"};
 
   TH1F* h_rate[nSp][nDet][nWt];
   TH1F* h_ratePzG0[nSp][nDet][nWt];
@@ -44,12 +50,14 @@ void radial_trans_radialCut_EG1(){
 
 ///Change the following lines as needed////
   const string geometry = "develop";
-  const string tgt_gen_config = "LH2_beam_V16";
-  const string plotType = "radial_trans_allE";//rCut or rNoCut and EG1 or allE
+  const string tgt_gen_config = "LH2_beam_wrstCaseI";
+  const string plotType = "radial_trans_rNoCut_EG1_openSector";//rCut or rNoCut and EG1 or allE
   int beamGen(1);
+//////////////////////////////////////////
 
+  TFile* outfile = new TFile(Form("./rootfiles/%s_%s_%s.root",geometry.c_str(),tgt_gen_config.c_str(),plotType.c_str()),"recreate");
 ///Change this line for appropriate rootfile directory////
-  TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/develop_br";
+  TString rootfile_dir = "/volatile/halla/moller12gev/devi/remoll_rootfiles/develop_br";
 //////////////////////////////////////////////////////////
 
   for(int iSp=0;iSp<nSp;iSp++){
@@ -75,7 +83,7 @@ void radial_trans_radialCut_EG1(){
   int nfile=0;
   Long64_t nentry=0;
   long nTotEv=0;
-  for(int ifile=1001;ifile<=1750;ifile++){
+  for(int ifile=1001;ifile<=6000;ifile++){
 ///Change this line for appropriate rootfiles////
     string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
 //////////////////////////////////////////////
@@ -122,92 +130,68 @@ void radial_trans_radialCut_EG1(){
 //comment following line if want to plot all r
 //        if(hit->at(j).r>100) continue;
 //comment following line if want to plot all E
-//        if(hit->at(j).k<1) continue;
+        if(hit->at(j).k<1) continue;
+        
+        double phi = hit->at(j).ph;
+        if(!((abs(phi)>=1*sep_mid-lam_angle/2.0 && abs(phi)<=1*sep_mid+lam_angle/2.0) ||
+            (abs(phi)>=3*sep_mid-lam_angle/2.0 && abs(phi)<=3*sep_mid+lam_angle/2.0) ||
+            (abs(phi)>=5*sep_mid-lam_angle/2.0 && abs(phi)<=5*sep_mid+lam_angle/2.0) ||
+            (abs(phi)>=7*sep_mid-lam_angle/2.0 && abs(phi)<=7*sep_mid+lam_angle/2.0) ||
+            (abs(phi)>=9*sep_mid-lam_angle/2.0 && abs(phi)<=9*sep_mid+lam_angle/2.0) ||
+            (abs(phi)>=11*sep_mid-lam_angle/2.0 && abs(phi)<=11*sep_mid+lam_angle/2.0) ||
+            (abs(phi)>=13*sep_mid-lam_angle/2.0 && abs(phi)<=13*sep_mid+lam_angle/2.0))
+          ) continue;
 
         h_rate[sp][dt][0]->Fill(hit->at(j).r,rate);
-//        h_rate[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+        h_rate[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
         h_xy[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//        h_xy[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+        h_xy[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
 
         if(hit->at(j).pz>=0){
           h_ratePzG0[sp][dt][0]->Fill(hit->at(j).r,rate);
-//          h_ratePzG0[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+          h_ratePzG0[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
           h_xyPzG0[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//          h_xyPzG0[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+          h_xyPzG0[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
         }else{
           h_ratePzL0[sp][dt][0]->Fill(hit->at(j).r,rate);
-//          h_ratePzL0[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+          h_ratePzL0[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
           h_xyPzL0[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//          h_xyPzL0[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+          h_xyPzL0[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
         }
 
         if(hit->at(j).pid==11 || hit->at(j).pid==-11){
           h_rate[4][dt][0]->Fill(hit->at(j).r,rate);
-//          h_rate[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+          h_rate[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
           h_xy[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//          h_xy[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+          h_xy[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
           if(hit->at(j).pz>=0){
             h_ratePzG0[4][dt][0]->Fill(hit->at(j).r,rate);
-//            h_ratePzG0[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+            h_ratePzG0[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
             h_xyPzG0[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//            h_xyPzG0[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+            h_xyPzG0[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
           }else{
             h_ratePzL0[4][dt][0]->Fill(hit->at(j).r,rate);
-//            h_ratePzL0[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+            h_ratePzL0[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
             h_xyPzL0[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//            h_xyPzL0[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+            h_xyPzL0[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
           }
         }
 
-        if(hit->at(j).vz<=-3875){
+        if(hit->at(j).vz<-3875){
           h_rate[5][dt][0]->Fill(hit->at(j).r,rate);
-//          h_rate[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+          h_rate[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
           h_xy[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//          h_xy[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+          h_xy[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
           if(hit->at(j).pz>=0){
             h_ratePzG0[5][dt][0]->Fill(hit->at(j).r,rate);
-//            h_ratePzG0[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+            h_ratePzG0[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
             h_xyPzG0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//            h_xyPzG0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+            h_xyPzG0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
           }else{
             h_ratePzL0[5][dt][0]->Fill(hit->at(j).r,rate);
-//            h_ratePzL0[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
+            h_ratePzL0[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
             h_xyPzG0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//            h_xyPzG0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          }
-        }
-        if(hit->at(j).vz<=-3875 && (hit->at(j).pid==11 || hit->at(j).pid==-211)){
-          h_rate[6][dt][0]->Fill(hit->at(j).r,rate);
-//          h_rate[6][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-          h_xy[6][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//          h_xy[6][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          if(hit->at(j).pz>=0){
-            h_ratePzG0[6][dt][0]->Fill(hit->at(j).r,rate);
-//            h_ratePzG0[6][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-            h_xyPzG0[6][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//            h_xyPzG0[6][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          }else{
-            h_ratePzL0[6][dt][0]->Fill(hit->at(j).r,rate);
-//            h_ratePzL0[6][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-            h_xyPzG0[6][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//            h_xyPzG0[6][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          }
-        }
-        if(hit->at(j).trid==1 && hit->at(j).pid==11){
-          h_rate[7][dt][0]->Fill(hit->at(j).r,rate);
-//          h_rate[7][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-          h_xy[7][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//          h_xy[7][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          if(hit->at(j).pz>=0){
-            h_ratePzG0[7][dt][0]->Fill(hit->at(j).r,rate);
-//            h_ratePzG0[7][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-            h_xyPzG0[7][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//            h_xyPzG0[7][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
-          }else{
-            h_ratePzL0[7][dt][0]->Fill(hit->at(j).r,rate);
-//            h_ratePzL0[7][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
-            h_xyPzG0[7][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
-//            h_xyPzG0[7][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+            h_xyPzG0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
           }
         }
 
@@ -219,9 +203,6 @@ void radial_trans_radialCut_EG1(){
   cout<<Form("Total number of file splits: %d",nfile)<<endl;
   cout<<Form("Total number of entries: %ld",nTotEv)<<endl;
    
-//////////////////////////////////////////
-  TFile* outfile = new TFile(Form("./rootfiles/%s_%s_%s.root",geometry.c_str(),tgt_gen_config.c_str(),plotType.c_str()),"recreate");
-
   for(int iDet=0;iDet<nDet;iDet++){
     outfile->mkdir(Form("%s",detH[iDet].c_str()));
     outfile->cd(Form("%s",detH[iDet].c_str()));
