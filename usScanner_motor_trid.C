@@ -2,14 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-
-void isValid1(std::vector<remollGenericDetectorHit_t> *fHit, std::vector<int> &xmotor_trid, std::vector<int> &ymotor_trid);
-
-const double pi = TMath::Pi();
-const double lam_length = 360.0;//azimuthal length of LAM quartz
-const double lam_rin = 1010.0;//inner radius of LAM quartz
-double lam_angle = atan(lam_length/lam_rin);
-double sep_mid = 2*pi/14.0;
+void isValid1(std::vector<remollGenericDetectorHit_t> *fHit, std::vector<int> &xMotor_trid, std::vector<int> &yMotor_trid);
 
 void usScanner_motor_trid(){
   gROOT->Reset();
@@ -19,23 +12,23 @@ void usScanner_motor_trid(){
   gStyle->SetPadGridY(1);
   TGaxis::SetMaxDigits(3);
 
-  const string spTit[] = {"e-/#pi- (KE>1 MeV)","e+/#pi+ (KE>1 MeV)","#gamma (KE>1 MeV)","neutron (KE>1 MeV)","e-/e+ (KE>1 MeV)","e- trid=1 (KE>1 MeV)"};
-//  const string spTit[] = {"e-/#pi- all KE","e+/#pi+ all KE","#gamma all KE","neutron all KE","e-/e+ all KE","e- trid=1 all KE"};
+  const double kinEcut = 0;//MeV
+  const string spTit[] = {"e-/#pi-","e+/#pi+","#gamma","neutron","e-/e+","e-/#pi- vz<=-3875","e- trid=1"};
   const int nSp = sizeof(spTit)/sizeof(*spTit);
-  const string spH[nSp] = {"epiM","epiP","g","n","ee","eTrIdCut"};
+  const string spH[nSp] = {"epiM","epiP","g","n","ee","epiMvzCut","eTrIdCut"};
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 
 ///Change the following lines for which detectors you want to include////
-  string detH[] = {"det1175","det2175","det175","det28"};
+  string detH[] = {"det1175","det2175","det28"};
   const int nDet = sizeof(detH)/sizeof(*detH);
-  const int Det[nDet] = {1175,2175,175,28};
-  map<int,int> dtM {{1175,1},{2175,2},{175,3},{28,4}};
+  const int Det[nDet] = {1175,2175,28};
+  map<int,int> dtM {{1175,1},{2175,2},{28,3}};
 ////////////////////////////////////////////////////////////////////////
 
   double rmin=0.0;
-  double rmax=1900.0;
-  int nbins=500;
-  const string tridCut[] = {"xmotor_trid","ymotor_trid","rate"};
+  double rmax=3000.0;
+  int nbins=1000;
+  const string tridCut[] = {"xMotor_trid","yMotor_trid","rate"};
   const int nCut = sizeof(tridCut)/sizeof(*tridCut);
   const string tridCut_unit[nCut] ={"hits/#thrownEvents","hits/#thrownEvents","hits/#thrownEvents"};
 
@@ -47,8 +40,8 @@ void usScanner_motor_trid(){
   TH2F* h_xyPzL0[nSp][nDet][nCut];
 ///Change the following lines as needed////
   const string geometry = "develop";
-  const string tgt_gen_config = "LH2_beam_V16";
-  const string plotType = "lam_trid_vzCut_EG1";//rCut or rNoCut and EG1 or allE
+  const string tgt_gen_config = "LH2_beam_V19";
+  const string plotType = Form("usScanner_motor_trid_NovzCut_EG%.0f",kinEcut);//rCut or rNoCut and EG1 or allE
   int beamGen(1);
 ///Change this line for appropriate rootfile directory////
   TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/develop_br";
@@ -76,7 +69,7 @@ void usScanner_motor_trid(){
   int nfile=0;
   Long64_t nentry=0;
   long nTotEv=0;
-  for(int ifile=1001;ifile<=6000;ifile++){
+  for(int ifile=1001;ifile<=1100;ifile++){
 ///Change this line for appropriate rootfiles////
     string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
 //////////////////////////////////////////////
@@ -106,27 +99,28 @@ void usScanner_motor_trid(){
    
     for(Long64_t ientry=0;ientry<nentry;ientry++){
       T->GetEntry(ientry);
-      std::vector<int> xmotor_trid;
-      std::vector<int> ymotor_trid;
-      std::vector<int>::iterator xmotor_it;
-      std::vector<int>::iterator ymotor_it;
-      isValid1(hit,xmotor_trid,ymotor_trid);
+
+      std::vector<int> xMotor_trid;
+      std::vector<int> yMotor_trid;
+      std::vector<int>::iterator xMotor_it;
+      std::vector<int>::iterator yMotor_it;
+      isValid1(hit,xMotor_trid,yMotor_trid);
+
       for(int j=0;j<hit->size();j++){
         if(std::isnan(rate) || std::isinf(rate)) continue;
         if(beamGen) rate = 1.0;
 
-        xmotor_it = find(xmotor_trid.begin(),xmotor_trid.end(),hit->at(j).trid);
-        ymotor_it = find(ymotor_trid.begin(),ymotor_trid.end(),hit->at(j).trid);
+        xMotor_it = find(xMotor_trid.begin(),xMotor_trid.end(),hit->at(j).trid);
+        yMotor_it = find(yMotor_trid.begin(),yMotor_trid.end(),hit->at(j).trid);
 
         int sp = spM[int(hit->at(j).pid)]-1;
         if(sp==-1) continue;
         int dt = dtM[int(hit->at(j).det)]-1;
         if(dt==-1) continue;
-        if(hit->at(j).k<1) continue;
+        if(hit->at(j).k<kinEcut) continue;
 
-        if(xmotor_it!=xmotor_trid.end()){
-         if(hit->at(j).trid==*xmotor_it){
-           double theta = (180.0/pi)*atan2(sqrt(pow(hit->at(j).px,2)+pow(hit->at(j).py,2)),hit->at(j).pz);
+        if(xMotor_it!=xMotor_trid.end()){
+         if(hit->at(j).trid==*xMotor_it){
            h_d_r[sp][dt][0]->Fill(hit->at(j).r,rate);
            h_xy[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
 
@@ -150,7 +144,7 @@ void usScanner_motor_trid(){
              }
            }
 
-           if(hit->at(j).trid==1 && hit->at(j).pid==11){
+           if(hit->at(j).vz<=-3875 && (hit->at(j).pid==11 || hit->at(j).pid==-211)){
              h_d_r[5][dt][0]->Fill(hit->at(j).r,rate);
              h_xy[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
              if(hit->at(j).pz>=0){
@@ -161,11 +155,22 @@ void usScanner_motor_trid(){
                h_xyPzG0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
              }
            }
+
+           if(hit->at(j).trid==1 && hit->at(j).pid==11){
+             h_d_r[6][dt][0]->Fill(hit->at(j).r,rate);
+             h_xy[6][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+             if(hit->at(j).pz>=0){
+               h_d_rPzG0[6][dt][0]->Fill(hit->at(j).r,rate);
+               h_xyPzG0[6][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+             }else{
+               h_d_rPzL0[6][dt][0]->Fill(hit->at(j).r,rate);
+               h_xyPzG0[6][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+             }
+           }
          }
         }
-        if(ymotor_it!=ymotor_trid.end()){
-         if(hit->at(j).trid==*ymotor_it){
-           double theta = (180.0/pi)*atan2(sqrt(pow(hit->at(j).px,2)+pow(hit->at(j).py,2)),hit->at(j).pz);
+        if(yMotor_it!=yMotor_trid.end()){
+         if(hit->at(j).trid==*yMotor_it){
            h_d_r[sp][dt][1]->Fill(hit->at(j).r,rate);
            h_xy[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate);
 
@@ -189,7 +194,7 @@ void usScanner_motor_trid(){
              }
            }
 
-           if(hit->at(j).trid==1 && hit->at(j).pid==11){
+           if(hit->at(j).vz<=-3875 && (hit->at(j).pid==11 || hit->at(j).pid==-211)){
              h_d_r[5][dt][1]->Fill(hit->at(j).r,rate);
              h_xy[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate);
              if(hit->at(j).pz>=0){
@@ -198,6 +203,18 @@ void usScanner_motor_trid(){
              }else{
                h_d_rPzL0[5][dt][1]->Fill(hit->at(j).r,rate);
                h_xyPzG0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate);
+             }
+           }
+
+           if(hit->at(j).trid==1 && hit->at(j).pid==11){
+             h_d_r[6][dt][1]->Fill(hit->at(j).r,rate);
+             h_xy[6][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate);
+             if(hit->at(j).pz>=0){
+               h_d_rPzG0[6][dt][1]->Fill(hit->at(j).r,rate);
+               h_xyPzG0[6][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate);
+             }else{
+               h_d_rPzL0[6][dt][1]->Fill(hit->at(j).r,rate);
+               h_xyPzG0[6][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate);
              }
            }
          }
@@ -223,7 +240,7 @@ void usScanner_motor_trid(){
             h_xyPzL0[4][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate);
           }
         }
-        if(hit->at(j).trid==1 && hit->at(j).pid==11){
+        if(hit->at(j).vz<=-3875 && (hit->at(j).pid==11 || hit->at(j).pid==-211)){
           h_d_r[5][dt][2]->Fill(hit->at(j).r,rate);
           h_xy[5][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate);
           if(hit->at(j).pz>=0){
@@ -232,6 +249,17 @@ void usScanner_motor_trid(){
           }else{
             h_d_rPzL0[5][dt][2]->Fill(hit->at(j).r,rate);
             h_xyPzG0[5][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate);
+          }
+        }
+        if(hit->at(j).trid==1 && hit->at(j).pid==11){
+          h_d_r[6][dt][2]->Fill(hit->at(j).r,rate);
+          h_xy[6][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate);
+          if(hit->at(j).pz>=0){
+            h_d_rPzG0[6][dt][2]->Fill(hit->at(j).r,rate);
+            h_xyPzG0[6][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate);
+          }else{
+            h_d_rPzL0[6][dt][2]->Fill(hit->at(j).r,rate);
+            h_xyPzG0[6][dt][2]->Fill(hit->at(j).x,hit->at(j).y,rate);
           }
         }
       }
@@ -267,21 +295,13 @@ void usScanner_motor_trid(){
   }
 }
 
-void isValid1(std::vector<remollGenericDetectorHit_t> *hit, std::vector<int> &xmotor_trid, std::vector<int> &ymotor_trid){
+void isValid1(std::vector<remollGenericDetectorHit_t> *hit, std::vector<int> &xMotor_trid, std::vector<int> &yMotor_trid){
   for(size_t j=0;j<hit->size();j++){
-//    double phi = hit->at(j).ph;
-//    if(phi<0) phi +=2.0*pi;
-//    double modphi = fmod(phi,2.0*pi/7.0);
-//    if(modphi<3.0*pi/28.0 || modphi>5.0*pi/28.0) continue;
-//    for(int sep=1;sep<=14;sep++){
-//      if(sep%2==1 && (abs(phi)>=sep*sep_mid-lam_angle/2.0 && abs(phi)<=sep*sep_mid+lam_angle/2.0)){
-        if(hit->at(j).det==3174&&hit->at(j).vz>18850&&hit->at(j).vz<18925){
-          xmotor_trid.push_back(hit->at(j).trid);
-        }
-        if(hit->at(j).det==2174&&hit->at(j).vz>18925&&hit->at(j).vz<19090){
-          ymotor_trid.push_back(hit->at(j).trid);
-        }
-//      }
-//    }
+     if(hit->at(j).det==1175/*&&hit->at(j).vz>=21356.51&&hit->at(j).vz<=21356.51+85.0*/){
+       xMotor_trid.push_back(hit->at(j).trid);
+     }
+     if(hit->at(j).det==2175/*&&hit->at(j).vz>=21305.66&&hit->at(j).vz<=21305.66+56.39*/){
+       yMotor_trid.push_back(hit->at(j).trid);
+     }
   }
 }

@@ -4,17 +4,17 @@
 #include <fstream>
 
 TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/develop_br";
-const string spTit[] = {"e-/#pi-","e+/#pi+","#gamma","neutron","e-/e+ (E>1MeV)","e-/#pi- vz<=-3875 (KE>1MeV)","e- trid==1"};
+const string spTit[] = {"#pi-","#pi+","e-","e+"};
 const int nSp = sizeof(spTit)/sizeof(*spTit);
-const string spH[nSp] ={"epiM","epiP","g","n","ee1","epiMvzCut1","eTrIdCut"};
-map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
-int color[nSp] = {2,3,1,4,6,7,8};
-const string detH[] = {"det176","det174","det28"};
-map<int,int> dtM {{176,1},{174,2},{28,3}};
+const string spH[nSp] ={"pi_minus","pi_plus","e_minus","e_plus"};
+map<int,int> spM {{-211,1},{211,2},{11,3},{-11,4}};
+int color[nSp] = {2,1,4,6};
+const string detH[] = {"det174","det28"};
+map<int,int> dtM {{174,1},{28,2}};
 const int nDet = sizeof(detH)/sizeof(*detH);
-int Det[nDet] = {176,174,28};
-double rmin[nDet] = {86.6,1010,920};
-double rmax[nDet] = {300.3,1130,1060};
+int Det[nDet] = {174,28};
+double rmin[nDet] = {1010,920};
+double rmax[nDet] = {1130,1060};
 TH1D* eRate[nSp][nDet];
 TH1D* eRate_pzG0[nSp][nDet];
 TH1D* eRate_pzL0[nSp][nDet];
@@ -24,7 +24,7 @@ int beamGen(1);
 const string tgt_gen_config = "LH2_beam_V1";
 string hist_title;
 
-void energy_distribution_sam_lam_ring5(){
+void energy_distribution_pion(){
    gStyle->SetOptStat(0);
    for(int iSp=0;iSp<nSp;iSp++){
     for(int iDet=0;iDet<nDet;iDet++){
@@ -45,7 +45,7 @@ void energy_distribution_sam_lam_ring5(){
       niceLogBins(eRate_pzL0[iSp][iDet]);
     }
    }
-    outfile = TFile::Open(Form("./rootfiles/samLg_ring5Q_lamQ_kinE_%s_test.root",tgt_gen_config.c_str()),"RECREATE");
+    outfile = TFile::Open(Form("./rootfiles/pion_kinE_%s.root",tgt_gen_config.c_str()),"RECREATE");
     int nfile=0;
     Long64_t nentry=0;
     long nTotEv=0;
@@ -99,33 +99,10 @@ void energy_distribution_sam_lam_ring5(){
               }else{
                eRate_pzL0[sp][dt]->Fill(hit->at(j).k,rate);
               }
-             if(hit->at(j).k>1 && (hit->at(j).pid==11 || hit->at(j).pid==-11)){
-               eRate[4][dt]->Fill(hit->at(j).k,rate);
-              if(hit->at(j).pz>=0){
-               eRate_pzG0[4][dt]->Fill(hit->at(j).k,rate);
-              }else{
-               eRate_pzL0[4][dt]->Fill(hit->at(j).k,rate);
-              }
-             }
-             if(hit->at(j).k>1 && hit->at(j).vz<=-3875 && (hit->at(j).pid==11 || hit->at(j).pid==11)){
-               eRate[5][dt]->Fill(hit->at(j).k,rate);
-               if(hit->at(j).pz>=0){
-                eRate_pzG0[5][dt]->Fill(hit->at(j).k,rate);
-               }else{
-                eRate_pzL0[5][dt]->Fill(hit->at(j).k,rate);
-               }
-             }
-             if(hit->at(j).trid==1 && hit->at(j).pid==11){
-               eRate[6][dt]->Fill(hit->at(j).k,rate);
-               if(hit->at(j).pz>=0){
-                eRate_pzG0[6][dt]->Fill(hit->at(j).k,rate);
-               }else{
-                eRate_pzL0[6][dt]->Fill(hit->at(j).k,rate);
-               }
-             }
            }
          }
        }
+       delete T;
        delete fin;
     }
    

@@ -4,38 +4,36 @@
 #include <fstream>
 
 TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/develop_br";
-const string spTit[] = {"e-/#pi-","e+/#pi+","#gamma","neutron","e-/e+ (E>1MeV)","e-/#pi- vz<=-3875 (KE>1MeV)","e- trid==1"};
+const string spTit[] = {"e-/#pi-","e+/#pi+","#gamma","neutron","e-/e+ (E>1 MeV)","primary (KE>1 MeV)"};
 const int nSp = sizeof(spTit)/sizeof(*spTit);
-const string spH[nSp] ={"epiM","epiP","g","n","ee1","epiMvzCut1","eTrIdCut"};
+const string spH[nSp] ={"epiM","epiP","g","n","ee1","pri1"};
 map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
-int color[nSp] = {2,3,1,4,6,7,8};
-const string detH[] = {"det176","det174","det28"};
-map<int,int> dtM {{176,1},{174,2},{28,3}};
+int color[nSp] = {2,3,1,4,6,7};
+const string detH[] = {"det1175","det2175"};
+map<int,int> dtM {{1175,1},{2175,2}};
 const int nDet = sizeof(detH)/sizeof(*detH);
-int Det[nDet] = {176,174,28};
-double rmin[nDet] = {86.6,1010,920};
-double rmax[nDet] = {300.3,1130,1060};
+int Det[nDet] = {1175,2175};
 TH1D* eRate[nSp][nDet];
 TH1D* eRate_pzG0[nSp][nDet];
 TH1D* eRate_pzL0[nSp][nDet];
 void niceLogBins(TH1*);
 TFile* outfile;
 int beamGen(1);
-const string tgt_gen_config = "LH2_beam_V1";
+const string tgt_gen_config = "LH2_beam_V19";
 string hist_title;
 
-void energy_distribution_sam_lam_ring5(){
+void rad_xy_distribution_usScanner_motors(){
    gStyle->SetOptStat(0);
    for(int iSp=0;iSp<nSp;iSp++){
     for(int iDet=0;iDet<nDet;iDet++){
       if(beamGen)
-      hist_title = Form("Kinetic Energy on %s (%s), %.0fmm<=r<=%.0fmm;E (MeV);hits/%sthrownEvents",detH[iDet].c_str(),tgt_gen_config.c_str(),rmin[iDet],rmax[iDet],"#");
+      hist_title = Form("Radial dist. on %s (%s);Radius (mm);hits/%sthrownEvents",detH[iDet].c_str(),tgt_gen_config.c_str(),"#");
       else
-      hist_title = Form("Kinetic Energy on %s (%s), %.0fmm<=r<=%.0fmm;E (MeV);rate (GHz)",detH[iDet].c_str(),tgt_gen_config.c_str(),rmin[iDet],rmax[iDet]);
+      hist_title = Form("Radial dist. on %s (%s);Radius (mm);rate (GHz)",detH[iDet].c_str(),tgt_gen_config.c_str());
 
-      eRate[iSp][iDet] = new TH1D(Form("%s_E_%s",detH[iDet].c_str(),spH[iSp].c_str()),hist_title.c_str(),121,-8,5);
-      eRate_pzG0[iSp][iDet] = new TH1D(Form("%s_EpzG0_%s",detH[iDet].c_str(),spH[iSp].c_str()),hist_title.c_str(),121,-8,5);
-      eRate_pzL0[iSp][iDet] = new TH1D(Form("%s_EpzL0_%s",detH[iDet].c_str(),spH[iSp].c_str()),hist_title.c_str(),121,-8,5);
+      eRate[iSp][iDet] = new TH1D(Form("%s_R_%s",detH[iDet].c_str(),spH[iSp].c_str()),hist_title.c_str(),1000,0,3000);
+      eRate_pzG0[iSp][iDet] = new TH1D(Form("%s_RpzG0_%s",detH[iDet].c_str(),spH[iSp].c_str()),hist_title.c_str(),1000,0,3000);
+      eRate_pzL0[iSp][iDet] = new TH1D(Form("%s_RpzL0_%s",detH[iDet].c_str(),spH[iSp].c_str()),hist_title.c_str(),1000,0,3000);
 
       eRate[iSp][iDet]->SetLineColor(color[iSp]);
       eRate_pzG0[iSp][iDet]->SetLineColor(color[iSp]);
@@ -45,11 +43,11 @@ void energy_distribution_sam_lam_ring5(){
       niceLogBins(eRate_pzL0[iSp][iDet]);
     }
    }
-    outfile = TFile::Open(Form("./rootfiles/samLg_ring5Q_lamQ_kinE_%s_test.root",tgt_gen_config.c_str()),"RECREATE");
+    outfile = TFile::Open(Form("./rootfiles/usScanner_motors_rad_xy_%s_test.root",tgt_gen_config.c_str()),"RECREATE");
     int nfile=0;
     Long64_t nentry=0;
     long nTotEv=0;
-    for(int ifile=1001;ifile<=6000;ifile++){
+    for(int ifile=1001;ifile<=1100;ifile++){
        string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
        ifstream inf(infile.c_str());
        if(!inf){
@@ -91,41 +89,32 @@ void energy_distribution_sam_lam_ring5(){
            if(sp==-1) continue;
            int dt = dtM[int(hit->at(j).det)]-1;
            if(dt==-1) continue;
-           
-           if(hit->at(j).r>=rmin[dt] && hit->at(j).r<=rmax[dt]){
-             eRate[sp][dt]->Fill(hit->at(j).k,rate);
-              if(hit->at(j).pz>=0){
-               eRate_pzG0[sp][dt]->Fill(hit->at(j).k,rate);
-              }else{
-               eRate_pzL0[sp][dt]->Fill(hit->at(j).k,rate);
-              }
-             if(hit->at(j).k>1 && (hit->at(j).pid==11 || hit->at(j).pid==-11)){
-               eRate[4][dt]->Fill(hit->at(j).k,rate);
-              if(hit->at(j).pz>=0){
-               eRate_pzG0[4][dt]->Fill(hit->at(j).k,rate);
-              }else{
-               eRate_pzL0[4][dt]->Fill(hit->at(j).k,rate);
-              }
-             }
-             if(hit->at(j).k>1 && hit->at(j).vz<=-3875 && (hit->at(j).pid==11 || hit->at(j).pid==11)){
-               eRate[5][dt]->Fill(hit->at(j).k,rate);
-               if(hit->at(j).pz>=0){
-                eRate_pzG0[5][dt]->Fill(hit->at(j).k,rate);
-               }else{
-                eRate_pzL0[5][dt]->Fill(hit->at(j).k,rate);
-               }
-             }
-             if(hit->at(j).trid==1 && hit->at(j).pid==11){
-               eRate[6][dt]->Fill(hit->at(j).k,rate);
-               if(hit->at(j).pz>=0){
-                eRate_pzG0[6][dt]->Fill(hit->at(j).k,rate);
-               }else{
-                eRate_pzL0[6][dt]->Fill(hit->at(j).k,rate);
-               }
+         
+           eRate[sp][dt]->Fill(hit->at(j).r,rate);
+            if(hit->at(j).pz>=0){
+             eRate_pzG0[sp][dt]->Fill(hit->at(j).r,rate);
+            }else{
+             eRate_pzL0[sp][dt]->Fill(hit->at(j).r,rate);
+            }
+           if(hit->at(j).k>1 && (hit->at(j).pid==11 || hit->at(j).pid==-11)){
+             eRate[4][dt]->Fill(hit->at(j).r,rate);
+            if(hit->at(j).pz>=0){
+             eRate_pzG0[4][dt]->Fill(hit->at(j).r,rate);
+            }else{
+             eRate_pzL0[4][dt]->Fill(hit->at(j).r,rate);
+            }
+           }
+           if(hit->at(j).k>1 && hit->at(j).vz<=-3875){
+             eRate[5][dt]->Fill(hit->at(j).r,rate);
+             if(hit->at(j).pz>=0){
+              eRate_pzG0[5][dt]->Fill(hit->at(j).r,rate);
+             }else{
+              eRate_pzL0[5][dt]->Fill(hit->at(j).r,rate);
              }
            }
          }
        }
+       delete T;
        delete fin;
     }
    
