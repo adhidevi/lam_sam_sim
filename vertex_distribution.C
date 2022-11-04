@@ -21,19 +21,19 @@ void vertex_distribution(){
   map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
 
 ///Change the following lines for which detectors you want to include////
-  string detH[] = {"det174","det175","det28"};
+  string detH[] = {"det176"};
 //LAM
   const int nDet = sizeof(detH)/sizeof(*detH);
-  const int Det[nDet] = {175,1751,28};
-  map<int,int> dtM {{175,1},{1751,2},{28,3}};
+  const int Det[nDet] = {176};
+  map<int,int> dtM {{176,1}};
 ////////////////////////////////////////////////////////////////////////
 
-  const double x_min = -3000;
-  const double x_max = 3000;
-  const double z_min = -5000;
+  const double x_min = -100;
+  const double x_max = 100;
+  const double z_min = -8000;
   const double z_max = 30000;
-  const double r_min[nDet] = {1200,1200,1200};
-  const double r_max[nDet] = {1900,1900,1900};
+  const double r_min[nDet] = {53};
+  const double r_max[nDet] = {63};
   const int nbin = 500;
   const string weight[] = {"rate"/*,"rateE"*/};
   const int nWt = sizeof(weight)/sizeof(*weight);
@@ -46,15 +46,21 @@ void vertex_distribution(){
   TH2F* h_VrVz[nSp][nDet][nWt];
   TH2F* h_VrVzPzG0[nSp][nDet][nWt];
   TH2F* h_VrVzPzL0[nSp][nDet][nWt];
+  TH2F* h_xy[nSp][nDet][nWt];
+  TH2F* h_xyPzG0[nSp][nDet][nWt];
+  TH2F* h_xyPzL0[nSp][nDet][nWt];
+  TH1F* h_r[nSp][nDet][nWt];
+  TH1F* h_rPzG0[nSp][nDet][nWt];
+  TH1F* h_rPzL0[nSp][nDet][nWt];
 
 ///Change the following lines as needed////
-  const string geometry = "develop_new";
-  const string tgt_gen_config = "LH2_beam_V23";
-  const string plotType = Form("vertex_distribution_EG%.0f",kinEcut);
+  const string geometry = "sam_study";
+  const string tgt_gen_config = "sam_symm_study";
+  const string plotType = Form("vertex_distribution_rmin53_rmax63_EG%.0f",kinEcut);
   int beamGen(1);
 
 ///Change this line for appropriate rootfile directory////
-  TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/develop_br";
+  TString rootfile_dir = "/volatile/halla/moller12gev/amgunsch/remoll_rootfiles/FieldMap_07_2022";
 //////////////////////////////////////////////////////////
 
   for(int iSp=0;iSp<nSp;iSp++){
@@ -63,6 +69,9 @@ void vertex_distribution(){
       string titleXZ = Form("%s vertex dist. on %s plane (%s),%.0f<r<%.0f;vz (mm);vx (mm);hits/#thrownEvents",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),r_min[iDet],r_max[iDet]);
       string titleYZ = Form("%s vertex dist. on %s plane (%s),%.0f<r<%.0f;vz (mm);vy (mm);hits/#thrownEvents",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),r_min[iDet],r_max[iDet]);
       string titleRZ = Form("%s vertex dist. on %s plane (%s),%.0f<r<%.0f;vz (mm);vr (mm);hits/#thrownEvents",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),r_min[iDet],r_max[iDet]);
+      string titleXY = Form("%s xy dist. on %s plane (%s),%.0f<r<%.0f;x (mm);y (mm);hits/#thrownEvents",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),r_min[iDet],r_max[iDet]);
+      string titleR = Form("%s radial dist. on %s plane (%s),%.0f<r<%.0f;r (mm);hits/#thrownEvents",spTit[iSp].c_str(),detH[iDet].c_str(),tgt_gen_config.c_str(),r_min[iDet],r_max[iDet]);
+
       h_VxVz[iSp][iDet][iWt] = new TH2F(Form("%s_VxVz_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleXZ.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
       h_VxVzPzG0[iSp][iDet][iWt] = new TH2F(Form("%s_VxVzPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleXZ.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
       h_VxVzPzL0[iSp][iDet][iWt] = new TH2F(Form("%s_VxVzPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleXZ.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
@@ -72,6 +81,13 @@ void vertex_distribution(){
       h_VrVz[iSp][iDet][iWt] = new TH2F(Form("%s_VrVz_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleRZ.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
       h_VrVzPzG0[iSp][iDet][iWt] = new TH2F(Form("%s_VrVzPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleRZ.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
       h_VrVzPzL0[iSp][iDet][iWt] = new TH2F(Form("%s_VrVzPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleRZ.c_str(),nbin,z_min,z_max,nbin,x_min,x_max);
+
+      h_xy[iSp][iDet][iWt] = new TH2F(Form("%s_xy_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleXY.c_str(),nbin,x_min,x_max,nbin,x_min,x_max);
+      h_xyPzG0[iSp][iDet][iWt] = new TH2F(Form("%s_xyPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleXY.c_str(),nbin,x_min,x_max,nbin,x_min,x_max);
+      h_xyPzL0[iSp][iDet][iWt] = new TH2F(Form("%s_xyPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleXY.c_str(),nbin,x_min,x_max,nbin,x_min,x_max);
+      h_r[iSp][iDet][iWt] = new TH1F(Form("%s_r_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleR.c_str(),nbin,0,x_max);
+      h_rPzG0[iSp][iDet][iWt] = new TH1F(Form("%s_rPzG0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleR.c_str(),nbin,0,x_max);
+      h_rPzL0[iSp][iDet][iWt] = new TH1F(Form("%s_rPzL0_%s_%s",detH[iDet].c_str(),spH[iSp].c_str(),weight[iWt].c_str()),titleR.c_str(),nbin,0,x_max);
     }
    }
   }
@@ -136,6 +152,10 @@ void vertex_distribution(){
 //        h_VyVz[sp][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
         h_VrVz[sp][dt][0]->Fill(hit->at(j).vz,vr,rate);
 //        h_VrVz[sp][dt][1]->Fill(hit->at(j).vz,vr,rate*hit->at(j).e);
+        h_xy[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+//        h_xy[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+        h_r[sp][dt][0]->Fill(hit->at(j).r,rate);
+//        h_r[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
 
         if(hit->at(j).pz>=0){
           h_VxVzPzG0[sp][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
@@ -144,6 +164,10 @@ void vertex_distribution(){
 //          h_VyVzPzG0[sp][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
           h_VrVzPzG0[sp][dt][0]->Fill(hit->at(j).vz,vr,rate);
 //          h_VrVzPzG0[sp][dt][1]->Fill(hit->at(j).vz,vr,rate*hit->at(j).e);
+          h_xyPzG0[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+//          h_xyPzG0[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+          h_rPzG0[sp][dt][0]->Fill(hit->at(j).r,rate);
+//          h_rPzG0[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
         }else{
           h_VxVzPzL0[sp][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
 //          h_VxVzPzL0[sp][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
@@ -151,6 +175,10 @@ void vertex_distribution(){
 //          h_VyVzPzL0[sp][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
           h_VrVzPzL0[sp][dt][0]->Fill(hit->at(j).vz,vr,rate);
 //          h_VrVzPzL0[sp][dt][1]->Fill(hit->at(j).vz,vr,rate*hit->at(j).e);
+          h_xyPzL0[sp][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+//          h_xyPzL0[sp][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+          h_rPzL0[sp][dt][0]->Fill(hit->at(j).r,rate);
+//          h_rPzL0[sp][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
         }
 
         if(hit->at(j).pid==11 || hit->at(j).pid==-11){
@@ -160,6 +188,10 @@ void vertex_distribution(){
 //          h_VyVz[4][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
           h_VrVz[4][dt][0]->Fill(hit->at(j).vz,vr,rate);
 //          h_VrVz[4][dt][1]->Fill(hit->at(j).vz,vr,rate*hit->at(j).e);
+          h_xy[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+//          h_xy[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+          h_r[4][dt][0]->Fill(hit->at(j).r,rate);
+//          h_r[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
           if(hit->at(j).pz>=0){
             h_VxVzPzG0[4][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
 //            h_VxVzPzG0[4][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
@@ -167,6 +199,10 @@ void vertex_distribution(){
 //            h_VyVzPzG0[4][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
             h_VrVzPzG0[4][dt][0]->Fill(hit->at(j).vz,vr,rate);
 //            h_VrVzPzG0[4][dt][1]->Fill(hit->at(j).vz,vr,rate*hit->at(j).e);
+            h_xyPzG0[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+//            h_xyPzG0[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+            h_rPzG0[4][dt][0]->Fill(hit->at(j).r,rate);
+//            h_rPzG0[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
           }else{
             h_VxVzPzL0[4][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
 //            h_VxVzPzL0[4][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
@@ -174,6 +210,10 @@ void vertex_distribution(){
 //            h_VyVzPzL0[4][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
             h_VrVzPzL0[4][dt][0]->Fill(hit->at(j).vz,vr,rate);
 //            h_VrVzPzL0[4][dt][1]->Fill(hit->at(j).vz,vr,rate*hit->at(j).e);
+            h_xyPzL0[4][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+//            h_xyPzL0[4][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+            h_rPzL0[4][dt][0]->Fill(hit->at(j).r,rate);
+//            h_rPzL0[4][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
           }
         }
 
@@ -184,6 +224,10 @@ void vertex_distribution(){
 //          h_VyVz[5][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
           h_VrVz[5][dt][0]->Fill(hit->at(j).vz,vr,rate);
 //          h_VrVz[5][dt][1]->Fill(hit->at(j).vz,vr,rate*hit->at(j).e);
+          h_xy[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+//          h_xy[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+          h_r[5][dt][0]->Fill(hit->at(j).r,rate);
+//          h_r[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
           if(hit->at(j).pz>=0){
             h_VxVzPzG0[5][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
 //            h_VxVzPzG0[5][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
@@ -191,6 +235,10 @@ void vertex_distribution(){
 //            h_VyVzPzG0[5][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
             h_VrVzPzG0[5][dt][0]->Fill(hit->at(j).vz,vr,rate);
 //            h_VrVzPzG0[5][dt][1]->Fill(hit->at(j).vz,vr,rate*hit->at(j).e);
+            h_xyPzG0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+//            h_xyPzG0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+            h_rPzG0[5][dt][0]->Fill(hit->at(j).r,rate);
+//            h_rPzG0[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
           }else{
             h_VxVzPzG0[5][dt][0]->Fill(hit->at(j).vz,hit->at(j).vx,rate);
 //            h_VxVzPzG0[5][dt][1]->Fill(hit->at(j).vz,hit->at(j).vx,rate*hit->at(j).e);
@@ -198,6 +246,10 @@ void vertex_distribution(){
 //            h_VyVzPzG0[5][dt][1]->Fill(hit->at(j).vz,hit->at(j).vy,rate*hit->at(j).e);
             h_VrVzPzG0[5][dt][0]->Fill(hit->at(j).vz,vr,rate);
 //            h_VrVzPzG0[5][dt][1]->Fill(hit->at(j).vz,vr,rate*hit->at(j).e);
+            h_xyPzL0[5][dt][0]->Fill(hit->at(j).x,hit->at(j).y,rate);
+//            h_xyPzL0[5][dt][1]->Fill(hit->at(j).x,hit->at(j).y,rate*hit->at(j).e);
+            h_rPzL0[5][dt][0]->Fill(hit->at(j).r,rate);
+//            h_rPzL0[5][dt][1]->Fill(hit->at(j).r,rate*hit->at(j).e);
           }
         }
 
@@ -227,6 +279,12 @@ void vertex_distribution(){
          h_VrVz[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_VrVzPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
          h_VrVzPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_xy[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_xyPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_xyPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_r[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_rPzG0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
+         h_rPzL0[iSp][iDet][iWt]->Scale(1.0/nTotEv);
        }else{
          h_VxVz[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
          h_VxVzPzG0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
@@ -237,6 +295,12 @@ void vertex_distribution(){
          h_VrVz[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
          h_VrVzPzG0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
          h_VrVzPzL0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_xy[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_xyPzG0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_xyPzL0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_r[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_rPzG0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
+         h_rPzL0[iSp][iDet][iWt]->Scale(1.0e-9/nfile);
        }
          h_VxVz[iSp][iDet][iWt]->Write();
          h_VxVzPzG0[iSp][iDet][iWt]->Write();
@@ -247,6 +311,12 @@ void vertex_distribution(){
          h_VrVz[iSp][iDet][iWt]->Write();
          h_VrVzPzG0[iSp][iDet][iWt]->Write();
          h_VrVzPzL0[iSp][iDet][iWt]->Write();
+         h_xy[iSp][iDet][iWt]->Write();
+         h_xyPzG0[iSp][iDet][iWt]->Write();
+         h_xyPzL0[iSp][iDet][iWt]->Write();
+         h_r[iSp][iDet][iWt]->Write();
+         h_rPzG0[iSp][iDet][iWt]->Write();
+         h_rPzL0[iSp][iDet][iWt]->Write();
       }
     }
   }

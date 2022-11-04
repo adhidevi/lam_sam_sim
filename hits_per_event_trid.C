@@ -4,8 +4,9 @@
 #include <fstream>
 void isValid1(std::vector<remollGenericDetectorHit_t> *fHit, std::vector<int> &target_trid, std::vector<int> &flange_trid, std::vector<int> &collar2OR_trid);
 const double pi = TMath::Pi();
-const double lam_length = 360.0;//azimuthal length of LAM quartz
-const double lam_rin = 1010.0;//inner radius of LAM quartz
+const double lam_length = 250.0;//azimuthal length of LAM quartz
+const double lam_rin = 1031.5;//inner radius of LAM quartz
+const double lam_width = 165.0;//radial width of LAM quartz
 double lam_angle = atan(lam_length/lam_rin);
 double sep_mid = 2*pi/14.0;
 
@@ -18,8 +19,8 @@ void hits_per_event_trid(){
   TGaxis::SetMaxDigits(3);
 
   const int Det = 174;
-  const double inRcut = 1010;
-  const double outRcut = 1130;
+  const double inRcut = lam_rin;//1031.5;
+  const double outRcut = lam_rin+lam_width;//1151.5;
   const double kinEcut = 0;//MeV
   const string spTit[] = {"e-/#pi-","e+/#pi+","#gamma","neutron"};
   const int nSp = sizeof(spTit)/sizeof(*spTit);
@@ -29,7 +30,7 @@ void hits_per_event_trid(){
   TString rootfile_dir = "/volatile/halla/parity/adhidevi/remoll_rootfiles/develop_br";
   const string geometry = "develop";
   const string tgt_gen_config = "LH2_beam_V18";
-  const string plotType = Form("hits_dist_trid_KEG%.0fMeV_split2",kinEcut);
+  const string plotType = Form("hits_dist_trid_KEG%.1fMeV_250mm165mmQuartz",kinEcut);
   int beamGen(1);
 
   const int nbin_hits = 100;
@@ -78,7 +79,7 @@ void hits_per_event_trid(){
   Long64_t nentry = 0;
   long nTotEv = 0;
 
-  for(int ifile=3501;ifile<=6000;ifile++){
+  for(int ifile=1001;ifile<=6000;ifile++){
     string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
 
     ifstream inf(infile.c_str());
@@ -253,7 +254,19 @@ void hits_per_event_trid(){
   TTree Tree("T","T");
   TBranch* nthrownEv = Tree.Branch("nthrownEv",&nTotEv,"nthrownEv/I");
 
+  double lam_qlength = lam_length;
+  double lam_qrin = lam_rin;
+  double lam_qwidth = lam_width;
+
+  TBranch* lam_rinBr = Tree.Branch("lam_rin",&lam_qrin,"lam_rin/D");
+  TBranch* lam_lengthBr = Tree.Branch("lam_length",&lam_qlength,"lam_length/D");
+  TBranch* lam_widthBr = Tree.Branch("lam_width",&lam_qwidth,"lam_width/D");
+
   nthrownEv->Fill();
+  lam_rinBr->Fill();
+  lam_lengthBr->Fill();
+  lam_widthBr->Fill();
+
   Tree.SetEntries();
   outfile->cd();
   Tree.Write();
@@ -261,13 +274,13 @@ void hits_per_event_trid(){
 }
 void isValid1(std::vector<remollGenericDetectorHit_t> *hit, std::vector<int> &target_trid, std::vector<int> &flange_trid, std::vector<int> &collar2OR_trid){
   for(size_t j=0;j<hit->size();j++){
-    if(hit->at(j).vz<=-3875){
+    if(hit->at(j).vz<=-3875){//target
       target_trid.push_back(hit->at(j).trid);
     }
-    if(hit->at(j).det==3174&&hit->at(j).vz>18850&&hit->at(j).vz<18925){
+    if(hit->at(j).det==3174&&hit->at(j).vz>18850&&hit->at(j).vz<18925){//DSwindow flange
       flange_trid.push_back(hit->at(j).trid);
     }
-    if(hit->at(j).det==2174&&hit->at(j).vz>18925&&hit->at(j).vz<19090){
+    if(hit->at(j).det==2174&&hit->at(j).vz>18925&&hit->at(j).vz<19090){//Collar 2 outer ring
       collar2OR_trid.push_back(hit->at(j).trid);
     }
   }

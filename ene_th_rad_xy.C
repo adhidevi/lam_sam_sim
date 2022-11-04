@@ -9,16 +9,16 @@ const string spTit[] = {"e-/#pi-","e+/#pi+","#gamma","neutron","e-/e+","e- trid=
 const int nSp = sizeof(spTit)/sizeof(*spTit);
 const string spH[nSp] ={"epiM","epiP","g","n","ee","eTrIdCut"};
 map<int,int> spM {{11,1},{-211,1},{-11,2},{211,2},{22,3},{2112,4}};
-const string detH[] = {"det178","det28","det176"};
+const string detH[] = {"det38","det44","det77","det81","det28","det31"};
 const int nDet = sizeof(detH)/sizeof(*detH);
-map<int,int> dtM {{178,1},{28,2},{176,3}};
-int Det[nDet] = {178,28,176};
+map<int,int> dtM {{38,1},{44,2},{77,3},{81,4},{28,5},{31,6}};
+int Det[nDet] = {38,44,77,81,28,31};
 
 const double kinEcut[] = {0,1};//MeV
 const int nkinEcut = sizeof(kinEcut)/sizeof(*kinEcut);
-const double rInCut[] = {1400,1500};
+const double rInCut[] = {0};
 const int nRcut = sizeof(rInCut)/sizeof(*rInCut);
-const double rOutCut[] = {1500,1700};
+const double rOutCut[] = {1000};
 
 TH1D* hE[nSp][nDet][nRcut];
 TH1D* hE_pzG0[nSp][nDet][nRcut];
@@ -37,7 +37,7 @@ TH2D* hXY_pzL0[nSp][nDet][nkinEcut];
 void niceLogBins(TH1*);
 TFile* outfile;
 int beamGen(1);
-const string tgt_gen_config = "LH2_beam_V24";
+const string tgt_gen_config = "LH2_beam_V26";
 string histE_title;
 string histR_title;
 string histXY_title;
@@ -55,12 +55,12 @@ void ene_th_rad_xy(){
       histR_title = Form("%s (KE>%.0f MeV) Radial dist. on %s (%s);Radius (mm);rate (GHz)",spTit[iSp].c_str(),kinEcut[ikinEcut],detH[iDet].c_str(),tgt_gen_config.c_str());
       histXY_title = Form("%s (KE>%.0f MeV) XY dist. on %s (%s);x (mm);y (mm);rate (GHz)",spTit[iSp].c_str(),kinEcut[ikinEcut],detH[iDet].c_str(),tgt_gen_config.c_str());
       }
-      hR[iSp][iDet][ikinEcut] = new TH1D(Form("%s_R_%s_%.0fMeV",detH[iDet].c_str(),spH[iSp].c_str(),kinEcut[ikinEcut]),histR_title.c_str(),500,0,1900);
-      hR_pzG0[iSp][iDet][ikinEcut] = new TH1D(Form("%s_RpzG0_%s_%.0fMeV",detH[iDet].c_str(),spH[iSp].c_str(),kinEcut[ikinEcut]),histR_title.c_str(),500,0,1900);
-      hR_pzL0[iSp][iDet][ikinEcut] = new TH1D(Form("%s_RpzL0_%s_%.0fMeV",detH[iDet].c_str(),spH[iSp].c_str(),kinEcut[ikinEcut]),histR_title.c_str(),500,0,1900);
-      hXY[iSp][iDet][ikinEcut] = new TH2D(Form("%s_XY_%s_%.0fMeV",detH[iDet].c_str(),spH[iSp].c_str(),kinEcut[ikinEcut]),histXY_title.c_str(),1000,-1900,1900,1000,-1900,1900);
-      hXY_pzG0[iSp][iDet][ikinEcut] = new TH2D(Form("%s_XYpzG0_%s_%.0fMeV",detH[iDet].c_str(),spH[iSp].c_str(),kinEcut[ikinEcut]),histXY_title.c_str(),1000,-1900,1900,1000,-1900,1900);
-      hXY_pzL0[iSp][iDet][ikinEcut] = new TH2D(Form("%s_XYpzL0_%s_%.0fMeV",detH[iDet].c_str(),spH[iSp].c_str(),kinEcut[ikinEcut]),histXY_title.c_str(),1000,-1900,1900,1000,-1900,1900);
+      hR[iSp][iDet][ikinEcut] = new TH1D(Form("%s_R_%s_%.0fMeV",detH[iDet].c_str(),spH[iSp].c_str(),kinEcut[ikinEcut]),histR_title.c_str(),500,0,1000);
+      hR_pzG0[iSp][iDet][ikinEcut] = new TH1D(Form("%s_RpzG0_%s_%.0fMeV",detH[iDet].c_str(),spH[iSp].c_str(),kinEcut[ikinEcut]),histR_title.c_str(),500,0,1000);
+      hR_pzL0[iSp][iDet][ikinEcut] = new TH1D(Form("%s_RpzL0_%s_%.0fMeV",detH[iDet].c_str(),spH[iSp].c_str(),kinEcut[ikinEcut]),histR_title.c_str(),500,0,1000);
+      hXY[iSp][iDet][ikinEcut] = new TH2D(Form("%s_XY_%s_%.0fMeV",detH[iDet].c_str(),spH[iSp].c_str(),kinEcut[ikinEcut]),histXY_title.c_str(),1000,-1000,1000,1000,-1000,1000);
+      hXY_pzG0[iSp][iDet][ikinEcut] = new TH2D(Form("%s_XYpzG0_%s_%.0fMeV",detH[iDet].c_str(),spH[iSp].c_str(),kinEcut[ikinEcut]),histXY_title.c_str(),1000,-1000,1000,1000,-1000,1000);
+      hXY_pzL0[iSp][iDet][ikinEcut] = new TH2D(Form("%s_XYpzL0_%s_%.0fMeV",detH[iDet].c_str(),spH[iSp].c_str(),kinEcut[ikinEcut]),histXY_title.c_str(),1000,-1000,1000,1000,-1000,1000);
 
       hR[iSp][iDet][ikinEcut]->Sumw2();
       hR_pzG0[iSp][iDet][ikinEcut]->Sumw2();
@@ -97,7 +97,7 @@ void ene_th_rad_xy(){
    int nfile=0;
    Long64_t nentry=0;
    long nTotEv=0;
-   for(int ifile=3001;ifile<=4000;ifile++){
+   for(int ifile=1001;ifile<=1100;ifile++){
       string infile = Form("%s/%s/%s_%d.root",rootfile_dir.Data(),tgt_gen_config.c_str(),tgt_gen_config.c_str(),ifile);
       ifstream inf(infile.c_str());
       if(!inf){
@@ -246,7 +246,7 @@ void ene_th_rad_xy(){
    
    cout<<Form("Total number of file splits: %d",nfile)<<endl;
    cout<<Form("Total number of entries: %ld",nTotEv)<<endl;
-   outfile = TFile::Open(Form("./rootfiles/ene_th_rad_xy_DBM_%s_split3.root",tgt_gen_config.c_str()),"RECREATE");
+   outfile = TFile::Open(Form("./rootfiles/ene_th_rad_xy_%s.root",tgt_gen_config.c_str()),"RECREATE");
    outfile->cd();
    for(int iDet=0;iDet<nDet;iDet++){
      outfile->mkdir(Form("%s",detH[iDet].c_str()));
